@@ -49,9 +49,8 @@ next-env.d.ts
 # Autopilot ledger, logs and videos (local data, not source)
 /runtime/
 
-# Local canvas data (inbox, snapshots, page transfer) and the optional external prompt-rules toolkit
+# Local canvas data (inbox, snapshots, page transfer)
 /data/
-/h3-tools/
 /config.local.json
 
 # Local-only baseline: preserve these files on disk, but do not version them.
@@ -110,3 +109,4 @@ __pycache__/
 /.vite-cache/
 *.bak_*
 *.before-*.bak
+__pycache__/

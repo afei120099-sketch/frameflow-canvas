@@ -6,7 +6,7 @@
 import { CATEGORY_BY_ID, type CategoryId } from "./zhengben-categories.ts";
 import type { H3qItem } from "./h3q-report.ts";
 
-/** 提示词规则工具包（可选，不随本仓库发布）所在目录用环境变量 FRAMEFLOW_H3_TOOLS 指定。 */
+/** 提示词规则工具包随仓库放在 h3-tools/，也可用环境变量 FRAMEFLOW_H3_TOOLS 指到别处。 */
 export const ZHENGBEN_PATH = "%FRAMEFLOW_H3_TOOLS%\\SKILL_h3-video.md";
 /** 正本 v2026-11-13 起写法：MiniMax 官方 Ref2VA 六段式；细则 h3q get 提示词 官方格式，范本两份。 */
 export const OFFICIAL_GUIDE = "python -I \"%FRAMEFLOW_H3_TOOLS%\\h3q.py\" get 提示词 官方格式";

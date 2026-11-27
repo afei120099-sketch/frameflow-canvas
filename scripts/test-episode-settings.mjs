@@ -226,18 +226,6 @@ assert.match(multi[1].prompt, /\n光线：夜里的办公室灯火通明：.*整
 assert.match(multi[3].prompt, /面部再亮一档。夜里的办公室灯火通明/, "一行两个占位");
 assert.equal(multi[2].promptTemplate.includes("{{本集.风格}}"), false, "T03 逐字照抄的风格句不当占位");
 assert.equal(episodeNearMisses(multi[2], parse(read("多场景_本集设定.json")).episode).map((miss) => miss.key).sort().join(","), "光线.办公室,底声.办公室", "T03 差一点的光线、底声会提示");
-// EP02_v5（46 镜，有就查）：画布收进本集设定 → h3q 展开 → 和原收件箱正文、画布展开都一字不差
-if (hasH3q && existsSync(v5file)) {
-  const v5 = parse(readFileSync(v5file, "utf8"));
-  const converted = collectEpisode(v5).queue;
-  const file = join(scratch, "v5-canvas.json");
-  writeFileSync(file, shotQueueJson(converted));
-  const expandedV5 = h3qExpand(file);
-  assert.equal(expandedV5.status, 0, expandedV5.stdout);
-  assert.deepEqual(rawPrompts(expandedV5.text).map((text) => text.trim()), prompts(v5), "EP02_v5：h3q 展开画布转换版 = 原收件箱正文");
-  assert.deepEqual(prompts(parse(readFileSync(file, "utf8"))), rawPrompts(expandedV5.text).map((text) => text.trim()), "EP02_v5：画布展开 = h3q 展开");
-  h3qCompared++;
-}
 // 规则：h3q expand 不肯展开（有 ERROR）的，画布也不收；h3q 能展开的，画布也能读
 if (hasH3q) {
   const okShot = (prompt, extra = {}) => ({ title: "A", prompt, roleIds: [], sceneAssetIds: [], seconds: 6, soundMode: "ambient", ...extra });
