@@ -1,0 +1,152 @@
+画布队列JSON怎么写｜独立续拍与首尾帧过渡
+2026-10-19，以当前lib/shot-queue.ts解析器为准。
+这是格式说明，不是正式剧本；不导入、不提交任何用户任务。旧Skill/说明中“队列只能多参考、不开首尾帧”的限制不适用于本次新增功能。
+
+一、先记住这三种写法
+
+普通主镜头：不写firstFrameFrom/lastFrameFrom，generationMode写auto或不写。
+尾帧续拍：generationMode写first-last，firstFrameFrom写{"shot":"镜头A","frame":"last"}。
+两段之间补过渡：再加lastFrameFrom:{"shot":"镜头B","frame":"first"}。
+
+最容易看反的地方：
+firstFrameFrom = 新片段的“开头画面”从哪里来。
+lastFrameFrom = 新片段的“结束画面”从哪里来。
+里面的frame:first/last = 取“来源视频”的首帧还是尾帧。
+所以，“firstFrameFrom里面写last”恰恰是“把前一视频的尾帧，作为新片段的首帧”，不是写反了。
+
+二、可直接复制的完整文件
+
+docs/队列JSON模板-主镜头与独立续段.json
+包含5个镜头：镜头A、镜头B、镜头A-续段1、镜头A到B-过渡、镜头A-续段2。
+执行：先主镜头A和B，主队列执行结束后，续段1和过渡按依赖提交，续段2必须等续段1完成。
+剪辑顺序仍由你决定，不按执行顺序自动拼接，也不自动采用任何结果。
+
+docs/队列JSON模板-独立续段带角色对白.json
+包含2个镜头：对白A、对白A-续段。分别保留自己的提示词、角色、场景和台词，续段不复制旧台词。
+
+两个文件均为“未填充模板”：角色ID、图片AssetID、提示词和台词都必须替换。占位ID通过格式检查不等于素材存在，未替换会被素材准备步骤拦住。不要直接生成模板占位内容。
+模板像素预算0.5只是示例；已有队列的原参数（例如0.88MP、比例、种子、禁配乐设置、对白及声音）按你的原值保留，不应为了套模板被覆盖。
+
+三、完整结构：层级不要放错
+
+最外层：version、title、defaults、chapters。
+chapters数组里：每章一个title和shots数组。
+shots数组里：每个对象就是一个独立生成节点/视频片段。
+
+每段建议明确写：
+title：该镜头的唯一名称，推荐全队列不重名。
+prompt：这一段自己的画面、动作、表演和台词；不能靠上一段提示词自动继承。
+roleIds：这一段绑定的角色ID数组；没有角色写[]，不要写人物名字代替ID。
+sceneAssetIds：这一段的参考图片Asset ID数组；没有图片写[]。用当前画布素材Asset ID，不是图片文件名、节点ID或media:/image:存储路径。
+seconds：这一段自己的时长，5～15之间的数字，不带引号、不加“秒”。实际帧数会对齐；不是单次可以生成30秒。长戏写多个独立续段。
+aspect：9:16、16:9、1:1、4:3或3:4；本队列不能写follow。
+soundMode：av=带对白的视听生成；ambient=环境/动作声、不写台词；silent=静音。
+
+defaults仅用于共用设置，例如workflow、generationMode、megapixels、resolution、seed、noBackgroundMusic。
+不要把roleIds、sceneAssetIds、seconds、aspect或dialogue只写在defaults：这些应逐镜填写。
+workflow：ultimate终极版，fast快速版；省略为ultimate。
+generationMode：建议defaults设auto或省略，只在续段/过渡段逐镜设first-last。不要把全队列默认设first-last，否则普通主镜头也会被要求提供关键帧。
+megapixels：0.30～1.00的数字；每镜可以覆盖defaults。resolution可写480p/720p，同级megapixels优先；都不写为0.50MP。
+seed：非负安全整数或字符串random，例如123或"random"；只写不带引号的random不是合法JSON。
+noBackgroundMusic：true/false，属于生成约束，不保证音轨里绝无音乐。
+
+四、来源怎么指定
+
+firstFrameFrom/lastFrameFrom的shot必须和来源镜头title完全一致，包括空格、大小写和标点。
+它不是视频文件名，不需要事先知道生成后.mp4叫什么，也不是roleId、Asset ID、节点ID。
+可跨章节引用；允许引用写在后面的镜头（如过渡的终点B），系统会排出可执行顺序。
+不允许来源不存在、标题重名导致不明确、引用自己，或A依赖B而B又依赖A。
+previous可表示原镜头表的前一镜，但不是运行时最后生成的视频。复杂队列推荐写完整唯一标题，避免改顺序后含义改变。
+
+续拍只要一端：
+"generationMode": "first-last",
+"firstFrameFrom": {"shot":"镜头A","frame":"last"}
+这里first-last是模式名称，并不要求一定填写两端。
+
+过渡需要两端：
+"generationMode": "first-last",
+"firstFrameFrom": {"shot":"镜头A","frame":"last"},
+"lastFrameFrom": {"shot":"镜头B","frame":"first"}
+
+连续续拍：
+续段2的firstFrameFrom.shot写续段1的title，例如"镜头A-续段1"。
+不能让续段2继续引用镜头A却误以为它会自动接续段1；系统只按你明确填写的来源取帧。
+
+静态图片也保留支持：
+firstFrameAssetId或lastFrameAssetId填已有图片Asset ID，配合first-last。
+同一端只能选择一种来源：不能同时写firstFrameAssetId与firstFrameFrom；尾帧同理。
+可以混用“视频尾帧当首帧＋指定图片当尾帧”，但仍要通过图片数量和提交前核对。
+当前自动截帧队列的首尾帧＋出镜角色主外观＋场景图合计最多9张；画外角色不提交外观，但其角色与声音规则仍需遵守。
+不要用extend、sourceShot或sourceVideoAssetId代替firstFrameFrom：extend是旧的另一条视频延长路径，不是这次的独立续拍，不会因为填写它而启用本功能。
+
+五、角色、对白和声音
+
+续段每镜自己写roleIds和sceneAssetIds。需要和主段保持一致，就重复填写相同ID；需要改变，就填该段自己的绑定。系统不会擅自复制主段的角色、提示词或台词。
+角色主外观与主声音在当前画布角色库设置。填写roleIds不等于人物一定开口；对白需要明确说话者。
+多句/多人推荐使用dialogue，每句为{"roleId":"本段已绑定角色ID","text":"本句台词"}。
+roleId必须出现在该镜的roleIds中；台词写在这一段prompt的<d>[Chinese] ...</d>中，并与dialogue.text保持一致。dialogue负责说话者和声音绑定，不替你把上一段台词自动续写。
+声音模式必须av。带dialogue时按每句roleId绑定主声音，不再用voiceRoleId指定一个统一说话人；不需要两套同时填写。
+仅在prompt中写单人台词时，也可用voiceRoleId明确指定本镜头某角色主声音，soundMode仍为av。
+autoVoiceDisabled:true表示不自动附带角色主声音，不是删除台词，也不意味着av视频一定无声音；需要主声音时不要照抄该开关。
+
+配角不用角色库、不附参考声音：
+dialogue里可写{"speaker":"路人","text":"本句台词","voice":"none"}，不写roleId。把外观和声音特征说明放在prompt里，不保证人物身份跨段一致。
+若配角另有参考声音，则voice写audio:声音素材AssetID。这里audio:后接Asset ID，不是本地音频存储路径；同一句不能同时混用roleId和speaker/voice。
+autoVoiceDisabled不负责清除显式voice:audio:绑定。参考声音上限3条，人数多时需分段安排。
+
+六、怎么导入和执行
+
+1. 先保存现有画布/导出队列备份，编辑的是一份待提交镜头表，不改正在跑的任务参数。
+2. 新建模板，或复制自己待提交的JSON，仅为需要的续段增加对应对象；替换所有占位内容。
+3. 顶部队列→载入JSON文件或粘贴→检查镜头表。面板应显示第二阶段及“首帧←某镜头的尾帧”等关系。
+4. 点击全部镜头入队／继续未完成。有效节点按原镜头表位置预建，不等于所有GPU任务同时运行。
+5. 主阶段先跑。全部主镜头结束后，系统检查具体来源视频是否成功、未回收、文件可读，再提取画面并提交独立续段/过渡。
+6. 关闭队列面板可以继续；不要关闭浏览器、刷新或切换画布。若中断，回原画布核实后点继续，不自动重提已接受任务。
+7. 来源失败的相关续段保留等待；先核实并修复原来源，再继续。无关成功来源的续段可以继续；状态不明则暂停核实。
+8. 每段都保留独立节点和结果，供你后期粗剪；没有自动合并、覆盖原片或自动采用。
+
+特别警告：不要把已跑过的队列改写后重新导入来“追加续段”。当前镜头表内容变化可能被视为新批次，造成主镜头再次创建。要给已完成的旧批次补续段，请先单独核实来源和原记录，不直接套用新批模板提交。
+
+七、常见错误对照
+
+报“自动截帧只适用于first-last”：给该续段明确加generationMode:first-last。
+报“同一端不能同时指定图片和视频来源”：该端静态AssetId和From只能留一个。
+报“来源不存在或标题不唯一”：逐字核对来源title，确保唯一，不填.mp4文件名。
+报“循环或引用自身”：画出来源箭头，不能绕回本段。
+只生成主段，后面等着：先看主镜头是否真成功、输出是否可读，以及面板给的等待原因；不要连续重导。
+想用2秒过渡却校验失败：当前每段仍最少5秒，可在后期粗剪裁短；不要改JSON规避模型时长限制。
+JSON语法报错：不能写//注释，不能多一个结尾逗号，键名/字符串用英文双引号，true/false不加引号，空数组写[]。
+角色没带声音：检查本段roleIds、dialogue/voiceRoleId、角色主声音、av以及autoVoiceDisabled，再看提交前核对的真实Audio清单。
+
+八、验收边界
+
+两份完整模板经当前解析器及阶段计划实际检查，角色/声音示例仍是占位资料，不代表本机有这些素材或已渲出视频。
+首尾帧＋参考仍为实验链路。调度/防重和实际首尾视频截帧已独立验收，不保证画面一定自然接上，也不保证脸、服装和音色完全一致。
+本说明不新增模型、不修改生产渲染逻辑、不导入队列、不运行GPU。
+
+九、🧪 时间锚点 timeAnchors（2026-10-27，未试渲）
+
+每镜可选字段 timeAnchors，最多 4 项，只用于终极版（workflow 省略或 "ultimate"）和极速版（"fast"），不能与 generationMode:"extend" 同用。每项二选一：
+- 静态图片：{"atSeconds": 3, "assetId": "图片素材ID"}，assetId 必须是当前画布真实存在的图片。
+- 视频截帧：{"atSeconds": 3, "frameFrom": {"shot": "唯一标题", "frame": "first" 或 "last"}}；也可用 shotId / shotNumber，沿用首尾帧来源的依赖与成环检查，来源出片后自动截帧（不做尾帧 AI 高清）。
+- 可加 "asReference": true，表示这张图同时作为参考图：参与 <Picture N> 编号并计入 9 张参考图上限。默认不占编号。
+
+规则：atSeconds 按 round(秒×24) 换成帧号，必须在第 1 帧到倒数第 2 帧之间，不能重复，不能与尾帧同帧。锚点之间或与首尾帧间隔不足 1 秒只给警告。提示词里如果写了没有对应参考图的 <Picture N>（例如想指向锚点图），校验直接报错。
+干跑报告 _compiled_*.json / _batch_*.json 的 compiledShots[].timeAnchors 列出每个锚点的秒、帧号、状态（resolved / deferred）和是否占编号；有 frameFrom 锚点的镜头在来源出片前为 deferred。
+
+示例（占位 ID 必须替换）：
+{
+  "title": "镜头C-倒下",
+  "shotId": "C01",
+  "prompt": "<Picture 1> is the room, used as the location. The camera slowly pushes in. Quiet room tone, no music.",
+  "roleIds": [],
+  "sceneAssetIds": ["请替换场景图assetId"],
+  "seconds": 6,
+  "aspect": "9:16",
+  "soundMode": "ambient",
+  "timeAnchors": [
+    {"atSeconds": 2.5, "assetId": "请替换锚点图assetId"},
+    {"atSeconds": 4.75, "frameFrom": {"shotId": "B01", "frame": "last"}}
+  ]
+}
+锚点表示最晚在这一时间附近达到该画面，变化通常提前发生，不保证精确时刻。

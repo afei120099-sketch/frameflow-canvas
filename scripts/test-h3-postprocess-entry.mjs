@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const source=readFileSync(new URL('../app/canvas-workspace.tsx',import.meta.url),'utf8');
+const menu=source.split('\n').find(l=>l.includes('{connectionMenu && editor && <div'));
+const h3Menu=menu.slice(menu.indexOf('?.type === "h3-node"'));
+assert.match(h3Menu,/chooseConnectionAction\("upscale"\)/);
+assert.match(h3Menu,/chooseConnectionAction\("smooth"\)/);
+assert.match(source,/action === "upscale" && \(source.type === "video-node" \|\| source.type === "h3-node"\)/);
+assert.match(source,/action === "smooth" && \(source.type === "video-node" \|\| source.type === "h3-node"\)/);
+assert.equal((source.match(/const source = useProcessingVideoSource\(editor, shape.id, revision\)/g)??[]).length,2);
+assert.match(source,/resolveCandidatePreview\(assets, \[current.props.previewAssetId, shot\?\.adoptedAssetId, legacy\?\.props.assetId\]\)/);
+assert.match(source,/getShotAssetVersions\(current.props.shotId\)/);
+assert.match(source,/window.removeEventListener\('frameflow-shot-changed',update\)/);
+console.log('PASS H3 postprocess entries: menu, direct connections, both processing inputs, selected candidate and refresh cleanup');

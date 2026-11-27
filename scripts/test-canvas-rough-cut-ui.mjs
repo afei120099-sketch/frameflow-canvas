@@ -1,0 +1,53 @@
+// Isolated browser/storage, CPU-only fixtures/export; no real user canvas or GPU jobs touched.
+import assert from 'node:assert/strict';
+import {pathToFileURL,fileURLToPath} from 'node:url';
+import {mkdtemp,readFile,rm} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+const [entry,executablePath,baseUrl='http://127.0.0.1:5173/']=process.argv.slice(2);
+const {chromium}=await import(pathToFileURL(entry).href);
+const temp=await mkdtemp(join(tmpdir(),'frameflow-cut-ui-'));
+const python=process.env.FRAMEFLOW_PYAV_PYTHON||'python';
+await promisify(execFile)(python,[fileURLToPath(new URL('./rough-cut-fixtures.py',import.meta.url)),'make',temp],{windowsHide:true});
+const browser=await chromium.launch({executablePath,headless:true});
+const context=await browser.newContext({viewport:{width:1800,height:1200}});const page=await context.newPage();
+const errors=[];page.on('pageerror',e=>errors.push(e.message));let gpuPosts=0,exportPayload;
+await context.route('**/__automation/**',r=>r.fulfill({status:200,contentType:'application/json',body:new URL(r.request().url()).pathname==='/__automation/ping'?'{"ok":true}':'{"ok":false}'}));
+await context.route('**/pending-shot-queue.json',r=>r.fulfill({status:404,body:''}));
+await context.route(url=>url.pathname.startsWith('/comfyui/'),r=>{if(r.request().method()==='POST')gpuPosts++;return r.fulfill({contentType:'application/json',body:'{}'});});
+await context.route('**/__test_clip/**',async r=>r.fulfill({contentType:'video/mp4',body:await readFile(join(temp,new URL(r.request().url()).pathname.split('/').at(-1)))}));
+page.on('request',r=>{if(new URL(r.url()).pathname==='/__rough_cut/jobs'&&r.method()==='POST')exportPayload=r.postDataJSON();});
+try{
+ await page.goto(baseUrl);await page.waitForFunction(()=>!!window.frameflow,{timeout:60000});
+ assert.equal(await page.getByRole('button',{name:'成片序列',exact:true}).count(),0);
+ const a=await page.evaluate(()=>window.frameflow.addVideo({url:location.origin+'/__test_clip/a24_audio.mp4',name:'左边视频.mp4',x:400,y:350}));
+ const b=await page.evaluate(()=>window.frameflow.addVideo({url:location.origin+'/__test_clip/b48_silent_portrait.mp4',name:'右边视频.mp4',x:1100,y:350}));
+ await page.evaluate(({a,b})=>{window.frameflow.move(a,80,150);window.frameflow.move(b,900,150);}, {a:a.id,b:b.id});
+ await page.keyboard.press('Shift+1');await page.waitForTimeout(450);
+ const nodes=page.locator('.tl-shape[data-shape-type="video-node"]');assert.equal(await nodes.count(),2);
+ assert.equal(await page.getByRole('button',{name:'加入成片',exact:true}).count(),0);
+ await page.mouse.click(1750,1100);await page.keyboard.press('Control+a');await page.waitForTimeout(200);
+ // Use the normal canvas context menu, not a custom injected start event.
+ await nodes.first().locator('.video-stage').click({position:{x:30,y:30},button:'right'});
+ await page.getByRole('menuitem',{name:'一键粗剪（2个视频）',exact:true}).click();
+ await page.getByLabel('粗剪第1段',{exact:true}).waitFor();
+ const first=page.getByLabel('粗剪第1段',{exact:true}),second=page.getByLabel('粗剪第2段',{exact:true});
+ assert.ok((await first.textContent()).includes('左边视频'));assert.ok((await second.textContent()).includes('右边视频'));
+ await first.getByLabel('第1段开始秒数').fill('1');await first.getByLabel('第1段结束秒数').fill('2');
+ await second.getByLabel('第2段开始秒数').fill('0.5');await second.getByLabel('第2段结束秒数').fill('1.5');
+ await first.getByRole('button',{name:'预览片段',exact:true}).click();
+ const preview=page.getByRole('dialog',{name:'粗剪片段预览'});await preview.waitFor();await preview.locator('video').waitFor();
+ await preview.getByRole('button',{name:'关闭预览'}).click();
+ await second.getByLabel('第2段顺序').selectOption('0');
+ assert.ok((await first.textContent()).includes('右边视频'));assert.equal(await first.getByLabel('第1段开始秒数').inputValue(),'0.5');
+ await page.screenshot({path:join(temp,'canvas-cut.png')});
+ await page.getByRole('button',{name:'确认并生成粗剪',exact:true}).click();
+ await page.getByText(/粗剪完成，已放到画布/).waitFor({timeout:60000});
+ assert.deepEqual(exportPayload.clips.map(c=>[c.filename,c.inPoint,c.outPoint]),[['右边视频.mp4',.5,1.5],['左边视频.mp4',1,2]]);
+ assert.equal(await page.locator('.tl-shape[data-shape-type="video-node"]').count(),3,'exactly one rough output');
+ assert.equal(gpuPosts,0);assert.deepEqual(errors,[]);
+ console.log('PASS actual isolated UI: selection/context menu, left-right order, trim, video preview, reorder preserving trims, one-click real CPU export, one output; no GPU jobs');
+ console.log('Screenshot:',join(temp,'canvas-cut.png'));
+}catch(e){console.error((await page.locator('body').innerText()).slice(-7000));console.error('Errors:',errors);console.error('Test fixture dir:',temp);throw e;}finally{await browser.close();/* Keep successful screenshot for visual review; no user files were changed. */}

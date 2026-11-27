@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import {resolveCandidatePreview} from '../lib/candidate-preview.ts';
+const versions=[{assetId:'D',storageReference:'video:d'},{assetId:'E-hd',storageReference:'video:hd'}];
+assert.equal(resolveCandidatePreview(versions,['deleted-C','deleted-A','E-hd']).assetId,'E-hd');
+assert.equal(resolveCandidatePreview(versions,['E-hd','D']).assetId,'E-hd','adoption updates stored selection before stale local state');
+assert.equal(resolveCandidatePreview(versions,['D','E-hd']).assetId,'D','explicit candidate selection works');
+assert.equal(resolveCandidatePreview(versions,['missing']).assetId,'E-hd','latest valid result fallback');
+assert.equal(resolveCandidatePreview([],['deleted']),undefined);
+assert.equal(resolveCandidatePreview(versions,['stale-preview','D']).assetId,'D','postprocessing must use adopted original instead of latest HD when preview is stale');
+console.log('PASS candidate preview: deleted ID fallback, derived/adopted versions, current selection, empty results');

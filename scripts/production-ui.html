@@ -1,0 +1,768 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>生产线 · Frameflow</title>
+<style>
+/* Same greys as app/tokens.css (this page is served on its own and cannot import it). */
+:root{
+  --ink:#0c0c0c; --bay:#0c0c0c; --panel:#151515; --panel-2:#1b1b1b; --line:#242424; --line-2:#3a3a3a;
+  --paper:#ededed; --muted:#a8a8a8; --dim:#858585;
+  --amber:#f5f5f5; --amber-deep:#f5f5f5; --amber-glow:rgba(255,255,255,.08);
+  --go:#8fb89c; --stop:#dc8a7c; --cold:#8d9aa8;
+  --display:var(--sans);
+  --sans:"Noto Sans SC","Microsoft YaHei UI","Microsoft YaHei","PingFang SC",sans-serif;
+  --mono:"Cascadia Mono","Cascadia Code",Consolas,monospace;
+  --r:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--ink);color:var(--paper);font:14px/1.55 var(--sans);-webkit-font-smoothing:antialiased;overflow:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:100;opacity:.07;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+button{font:inherit;color:inherit;cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.45}
+:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+.app{display:grid;grid-template-columns:272px 1fr;height:100vh}
+
+/* ── rail ── */
+.rail{background:linear-gradient(180deg,#13110f,#0f0e0c);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.brand{padding:22px 20px 18px;border-bottom:1px solid var(--line);position:relative}
+.brand h1{margin:0;font:400 30px/1 var(--display);letter-spacing:.06em}
+.brand h1 b{color:var(--amber);font-weight:400}
+.brand small{display:block;margin-top:8px;color:var(--dim);font:12px var(--mono);letter-spacing:.18em;text-transform:uppercase}
+.canvas-tag{display:inline-block;margin-top:10px;padding:3px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.27);color:var(--amber);font-size:12px}
+.canvas-tag:empty{display:none}
+.tally{display:flex;align-items:center;gap:10px;margin:14px 20px 4px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);font-size:12px;color:var(--muted)}
+.lamp{width:10px;height:10px;border-radius:50%;flex:none;background:var(--dim);box-shadow:0 0 0 3px rgba(255,255,255,.03)}
+.lamp.on{background:var(--amber);box-shadow:0 0 12px var(--amber),0 0 0 3px var(--amber-glow);animation:breath 1.8s ease-in-out infinite}
+.lamp.ok{background:var(--go);box-shadow:0 0 10px rgba(143,184,156,.5)}
+.lamp.bad{background:var(--stop);box-shadow:0 0 12px rgba(220,138,124,.6)}
+.lamp.wait{background:var(--cold);box-shadow:0 0 10px rgba(141,154,168,.45)}
+@keyframes breath{50%{opacity:.55}}
+.rail-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px;color:var(--dim);font:12px var(--mono);letter-spacing:.16em;text-transform:uppercase}
+.rail-head button{border:1px solid var(--line-2);background:transparent;border-radius:999px;padding:3px 11px;font:12px var(--sans);color:var(--amber);letter-spacing:0}
+.rail-head button:hover{background:var(--amber-glow)}
+.episodes{list-style:none;margin:0;padding:4px 10px 20px;overflow:auto;flex:1}
+.ep{display:block;width:100%;text-align:left;border:1px solid transparent;background:transparent;border-radius:var(--r);padding:11px 12px;margin-bottom:4px;transition:background .15s,border-color .15s}
+.ep:hover{background:var(--panel)}
+.ep.active{background:var(--panel-2);border-color:var(--line-2);box-shadow:inset 3px 0 0 var(--amber)}
+.ep strong{display:block;font-weight:500;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ep .meter{display:flex;height:4px;border-radius:2px;overflow:hidden;margin-top:9px;background:#2a2520}
+.ep .meter i{display:block;height:100%}
+.ep small{display:flex;justify-content:space-between;margin-top:6px;color:var(--dim);font:12px var(--mono)}
+.empty-rail{padding:18px 20px;color:var(--dim);font-size:13px}
+.episodes li{position:relative}
+.ep-del{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:6px;border:1px solid transparent;background:transparent;color:var(--dim);font-size:15px;line-height:1;opacity:0;transition:opacity .15s}
+.episodes li:hover .ep-del,.ep-del:focus-visible{opacity:1}
+.ep-del:hover{color:var(--stop);border-color:rgba(220,138,124,.5);background:rgba(220,138,124,.08)}
+.ep strong{padding-right:22px}
+.shot-del{margin-top:10px;border:1px solid var(--line-2);background:transparent;border-radius:999px;padding:2px 10px;font-size:12px;color:var(--dim)}
+.shot-del:hover{color:var(--stop);border-color:rgba(220,138,124,.5)}
+
+/* ── stage ── */
+.stage{display:flex;flex-direction:column;min-width:0;min-height:0;background:radial-gradient(1200px 500px at 70% -10%,rgba(255,255,255,.04),transparent 60%),var(--bay)}
+.slate{padding:22px 32px 18px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:18px;align-items:end;position:relative}
+.slate::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:6px;opacity:.35;
+  background:repeating-linear-gradient(-45deg,var(--paper) 0 10px,transparent 10px 20px);mask:linear-gradient(90deg,#000,transparent 40%)}
+.slate .kicker{font:12px var(--mono);letter-spacing:.2em;color:var(--dim);text-transform:uppercase}
+.slate>div:first-child{min-width:0}
+.slate h2{margin:4px 0 0;font:400 34px/1.15 var(--display);letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slate h2 .paused{font:12px var(--sans);vertical-align:middle;margin-left:10px;padding:3px 10px;border-radius:999px;border:1px solid var(--cold);color:var(--cold)}
+.actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+.btn{border:1px solid var(--line-2);background:var(--panel);border-radius:8px;padding:8px 14px;font-size:13px;transition:background .15s,border-color .15s,transform .1s}
+.btn:hover:not(:disabled){border-color:var(--muted);background:var(--panel-2)}
+.btn:active:not(:disabled){transform:translateY(1px)}
+.btn.primary{background:linear-gradient(180deg,var(--amber),var(--amber-deep));border-color:var(--amber-deep);color:#1a1006;font-weight:700}
+.btn.primary:hover:not(:disabled){filter:brightness(1.07)}
+.btn.ghost{background:transparent}
+.btn .k{font:12px var(--mono);opacity:.7;margin-left:6px}
+
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin:18px 32px 0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--panel)}
+.strip div{padding:12px 14px;border-right:1px solid var(--line);position:relative}
+.strip div:last-child{border-right:0}
+.strip b{display:block;font:600 24px/1 var(--mono);color:var(--paper)}
+.strip span{display:block;margin-top:6px;font-size:12px;color:var(--muted)}
+.strip div.hot b{color:var(--amber)}
+.strip div::after{content:"";position:absolute;right:-6px;top:50%;width:10px;height:10px;transform:translateY(-50%) rotate(45deg);background:var(--panel);border-top:1px solid var(--line);border-right:1px solid var(--line);z-index:1}
+.strip div:last-child::after{display:none}
+
+.alerts{margin:14px 32px 0;display:grid;gap:8px}
+.alert{display:flex;gap:12px;align-items:center;padding:11px 14px;border-radius:var(--r);border:1px solid rgba(220,138,124,.45);background:rgba(220,138,124,.08);font-size:13px}
+.alert.warn{border-color:rgba(255,255,255,.27);background:var(--amber-glow)}
+.alert p{margin:0;flex:1}
+.alert code{font:12px var(--mono);color:var(--muted)}
+
+.reel{flex:1;overflow:auto;padding:18px 32px 60px}
+.legend{display:grid;grid-template-columns:150px 150px 1fr 1.15fr;gap:18px;padding:0 16px 8px;color:var(--dim);font:12px var(--mono);letter-spacing:.16em;text-transform:uppercase;position:sticky;top:-18px;background:linear-gradient(var(--bay) 70%,transparent);z-index:5;padding-top:12px}
+.shot{display:grid;grid-template-columns:150px 150px 1fr 1.15fr;gap:18px;align-items:start;padding:16px;margin-bottom:12px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,var(--panel),#1a1714);position:relative}
+.reel.intro .shot{animation:rise .45s both}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}}
+.shot::before{content:"";position:absolute;left:-1px;top:14px;bottom:14px;width:3px;border-radius:2px;background:var(--line-2)}
+.shot[data-stage="done"]::before{background:var(--go)}
+.shot[data-stage="keyframe_review"]::before,.shot[data-stage="video_review"]::before{background:var(--amber)}
+.shot[data-stage="keyframe_running"]::before,.shot[data-stage="video_running"]::before{background:var(--cold);animation:breath 1.6s infinite}
+.code{font:600 30px/1 var(--mono);letter-spacing:-.02em}
+.code small{display:block;font:12px var(--sans);color:var(--muted);letter-spacing:0;margin-top:8px;line-height:1.4}
+.code .chip{margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:12px;border:1px solid var(--line-2);color:var(--muted);white-space:nowrap}
+.chip.amber{border-color:rgba(255,255,255,.3);color:var(--amber)}
+.chip.go{border-color:rgba(143,184,156,.5);color:var(--go)}
+.chip.cold{border-color:rgba(141,154,168,.5);color:var(--cold)}
+.chip.stop{border-color:rgba(220,138,124,.5);color:var(--stop)}
+.frame{position:relative;border-radius:8px;overflow:hidden;background:#0b0a09;border:1px solid var(--line);aspect-ratio:var(--ar,9/16)}
+.frame img,.frame video{display:block;width:100%;height:100%;object-fit:cover}
+.frame.missing{display:grid;place-items:center;color:var(--dim);font-size:12px;text-align:center;padding:8px;border-style:dashed}
+.sprockets{position:absolute;left:0;right:0;height:9px;background:repeating-linear-gradient(90deg,transparent 0 6px,rgba(0,0,0,.55) 6px 12px);opacity:.6;pointer-events:none}
+.sprockets.top{top:0}.sprockets.bottom{bottom:0}
+.cands{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin}
+.cand{flex:0 0 auto;width:118px;position:relative}
+.cand.video{width:138px}
+.cand .frame{transition:transform .2s,box-shadow .2s,border-color .2s}
+.cand:hover .frame{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.45)}
+.cand.approved .frame{border-color:var(--amber);box-shadow:0 0 0 2px var(--amber),0 0 22px var(--amber-glow)}
+.cand.rejected .frame{filter:grayscale(1) brightness(.45)}
+.cand .score{position:absolute;top:6px;left:6px;padding:2px 7px;border-radius:6px;background:rgba(14,13,12,.82);font:600 12px var(--mono);backdrop-filter:blur(4px)}
+.cand .score.good{color:var(--go)}.cand .score.mid{color:var(--amber)}.cand .score.low{color:var(--stop)}
+.cand .badge{position:absolute;top:6px;right:6px;padding:2px 7px;border-radius:6px;background:var(--amber);color:#1a1006;font:700 12px var(--sans)}
+.cand .problems{margin-top:5px;font-size:12px;color:var(--stop);line-height:1.35}
+.cand .tools{display:flex;gap:4px;margin-top:6px}
+.cand .tools button{flex:1;border:1px solid var(--line-2);background:var(--panel-2);border-radius:6px;padding:4px 0;font-size:12px}
+.cand .tools button.yes:hover{border-color:var(--amber);color:var(--amber)}
+.cand .tools button.no:hover{border-color:var(--stop);color:var(--stop)}
+.cand .tools button.zoom{flex:0 0 30px}
+.slot{flex:0 0 auto;width:118px;aspect-ratio:var(--ar,9/16);border-radius:8px;border:1px dashed var(--line-2);display:grid;place-items:center;color:var(--dim);font-size:12px;text-align:center;padding:6px;background:repeating-linear-gradient(-45deg,transparent 0 8px,rgba(255,255,255,.015) 8px 16px)}
+.slot.running{border-color:var(--cold);color:var(--cold)}
+.slot.running::before{content:"";display:block;width:22px;height:22px;margin:0 auto 6px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.slot.failed{border-color:rgba(220,138,124,.5);color:var(--stop)}
+.col-head{display:flex;gap:6px;align-items:center;margin-bottom:8px;min-height:26px}
+.col-head .mini{border:1px solid var(--line-2);background:transparent;border-radius:999px;padding:2px 10px;font-size:12px;color:var(--muted)}
+.col-head .mini:hover:not(:disabled){color:var(--amber);border-color:var(--amber)}
+.locked{color:var(--dim);font-size:12px;padding:8px 0}
+.health{margin-top:10px}
+.health summary{cursor:pointer;list-style:none;display:inline-flex}
+.health summary::-webkit-details-marker{display:none}
+.health ul{margin:8px 0 0;padding:0 0 0 16px;font-size:12px;line-height:1.5;color:var(--muted);max-width:240px}
+.health li{margin-bottom:6px}
+
+/* ── welcome ── */
+.welcome{margin:auto;max-width:620px;text-align:center;padding:40px}
+.welcome h2{font:400 44px/1.1 var(--display);margin:0 0 14px}
+.welcome p{color:var(--muted);margin:0 0 26px}
+.flow{display:flex;justify-content:center;gap:0;margin:0 0 30px;font-size:13px}
+.flow span{padding:8px 14px;border:1px solid var(--line-2);margin-left:-1px;background:var(--panel)}
+.flow span:first-child{border-radius:8px 0 0 8px}.flow span:last-child{border-radius:0 8px 8px 0;color:var(--amber)}
+
+/* ── dialogs ── */
+dialog{border:1px solid var(--line-2);border-radius:16px;background:var(--panel);color:var(--paper);padding:0;width:min(900px,94vw);max-height:90vh;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+dialog::backdrop{background:rgba(5,4,3,.72);backdrop-filter:blur(3px)}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+.dlg-head h3{margin:0;font:400 22px var(--display)}
+.dlg-body{padding:16px 20px;overflow:auto;max-height:calc(90vh - 130px)}
+.dlg-foot{display:flex;gap:8px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--line)}
+textarea{width:100%;min-height:420px;resize:vertical;background:#100e0c;color:var(--paper);border:1px solid var(--line-2);border-radius:10px;padding:14px;font:12.5px/1.6 var(--mono);tab-size:2}
+.hint{color:var(--muted);font-size:12px;margin:0 0 10px}
+.err{color:var(--stop);font-size:13px;margin:8px 0 0;white-space:pre-wrap}
+.drop{border:1.5px dashed var(--line-2);border-radius:14px;padding:26px;text-align:center;color:var(--muted);transition:border-color .15s,background .15s;margin-bottom:14px}
+.drop.over{border-color:var(--amber);background:var(--amber-glow);color:var(--paper)}
+.drop strong{display:block;font:400 20px var(--display);color:var(--paper);margin-bottom:4px}
+.media-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.media{border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--panel-2);font-size:12px}
+.media .frame{aspect-ratio:1;margin-bottom:6px}
+.media .name{font:12px var(--mono);word-break:break-all}
+.media.miss{border-color:rgba(220,138,124,.45)}
+.media label{display:block;margin-top:6px;color:var(--amber);cursor:pointer}
+.media input{display:none}
+.match-bar{display:flex;gap:12px;align-items:center;margin:-4px 0 12px}
+.match-bar .hint{margin:0}
+.match{border:1px solid var(--line-2);border-radius:12px;background:#191613;padding:12px;margin-bottom:14px}
+.match-head{display:flex;gap:12px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.match-head .hint{margin:0;flex:1}
+.match select{background:#100e0c;color:var(--paper);border:1px solid var(--line-2);border-radius:8px;padding:5px 8px;font:12px var(--sans);max-width:100%}
+.match-list{display:grid;gap:8px}
+.match-row{display:grid;grid-template-columns:56px 1fr minmax(220px,1.2fr);gap:12px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2)}
+.match-row .thumb{width:56px;height:56px;border-radius:6px;background:#0b0a09 center/cover no-repeat;border:1px solid var(--line);display:grid;place-items:center;color:var(--dim);font-size:18px}
+.match-row .name{font:12px var(--mono);word-break:break-all}
+.match-row small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.match-row small.ok{color:var(--go)}.match-row small.ask{color:var(--amber)}
+.viewer{width:min(1100px,96vw)}
+.viewer .dlg-body{display:flex;gap:18px;justify-content:center;align-items:flex-start}
+.viewer figure{margin:0;flex:1;max-width:480px}
+.viewer figure img,.viewer figure video{width:100%;border-radius:10px;border:1px solid var(--line);display:block;max-height:70vh;object-fit:contain;background:#000}
+.viewer figcaption{margin-top:6px;color:var(--muted);font-size:12px;text-align:center}
+.role-pick{display:grid;gap:8px}
+.role-pick label{display:flex;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel-2);cursor:pointer}
+.role-pick label:hover{border-color:var(--line-2)}
+.role-pick input{accent-color:var(--amber);width:16px;height:16px}
+.role-pick b{font-weight:500}.role-pick small{color:var(--muted);margin-left:auto;font-size:12px}
+.pending-note{margin-right:auto;color:var(--amber);font-size:12px;align-self:center}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);opacity:0;padding:11px 18px;border-radius:10px;background:#2b2621;border:1px solid var(--line-2);box-shadow:0 14px 40px rgba(0,0,0,.5);transition:all .25s;z-index:50;max-width:80vw;font-size:13px}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.bad{border-color:var(--stop)}
+
+@media (max-width:1100px){
+  .app{grid-template-columns:1fr}
+  .rail{display:none}
+  .legend{display:none}
+  .shot{grid-template-columns:1fr 104px;gap:12px}
+  .shot>.code{grid-column:1}.shot>div:nth-child(2){grid-column:2;grid-row:1}
+  .shot>.kf,.shot>.vd{grid-column:1/-1}
+  .code{font-size:24px}
+  .slate h2{font-size:26px;white-space:normal}
+  .strip{grid-template-columns:repeat(3,1fr)}
+  .slate{grid-template-columns:1fr;padding:18px 16px}
+  .reel{padding:14px 16px 60px}.strip,.alerts{margin-left:16px;margin-right:16px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand"><h1>生产<b>线</b></h1><small>Frameflow · production line</small><span class="canvas-tag" id="canvasTag"></span></div>
+    <div class="tally" id="tally"><span class="lamp" id="lamp"></span><span id="tallyText">连接中…</span></div>
+    <div class="rail-head"><span>剧集</span><button type="button" id="newEp">＋ 新建</button></div>
+    <ul class="episodes" id="episodes"></ul>
+  </aside>
+  <main class="stage" id="stage"></main>
+</div>
+
+<dialog id="editor">
+  <div class="dlg-head"><h3 id="editorTitle">新建剧集</h3><button class="btn ghost" data-close>关闭</button></div>
+  <div class="dlg-body">
+    <p class="hint">格式 <code>production-episode-v1</code>。素材字段写文件名，建好后在「素材」里拖入同名文件，画布里有的会自动补上。<b>storyboard（分镜图）可选</b>：写了就按分镜定构图和机位（png/jpg/webp，比例和剧集一致，草图/白模截图都行）；不写或写 null 就按 keyframePrompt 直接出图，这时 keyframePrompt 要写清景别、机位和人物位置。<b>keyframePrompt / look 用英文、只写想要的</b>（Flux 读不懂中文，也会把 no/不要 后面的东西画出来）；videoPrompt 就是平时队列里的 H3 提示词，<code>&lt;Picture 1&gt;</code> 是通过的关键帧。让别的 AI 来写：点「复制给 AI 的说明」，连同剧情一起发给它，把它回的 JSON 粘到这里。</p>
+    <textarea id="editorText" spellcheck="false"></textarea>
+    <p class="err" id="editorErr"></p>
+  </div>
+  <div class="dlg-foot"><button class="btn ghost" id="importRoles" hidden>从画布导入角色</button><span class="pending-note" id="pendingNote"></span><button class="btn ghost" data-ai-guide>复制给 AI 的说明</button><button class="btn ghost" id="fillTemplate">填入模板</button><button class="btn primary" id="saveEditor">保存</button></div>
+</dialog>
+
+<dialog id="rolesDlg">
+  <div class="dlg-head"><h3>从画布导入角色</h3><button class="btn ghost" data-close>关闭</button></div>
+  <div class="dlg-body"><p class="hint">读取打开生产线的那个画布页里的角色：脸部参考（没有就用主外观）、主外观图、主声音。只读，不改画布。保存剧集时自动上传。</p><div class="role-pick" id="rolePick"></div></div>
+  <div class="dlg-foot"><button class="btn primary" id="confirmRoles">加入剧集</button></div>
+</dialog>
+
+<dialog id="mediaDlg">
+  <div class="dlg-head"><h3>素材</h3><button class="btn ghost" data-close>关闭</button></div>
+  <div class="dlg-body">
+    <div class="drop" id="drop"><strong>把图片拖到这里</strong>按文件名对上剧集里写的名字；也可以点下面每一项单独选文件</div>
+    <div class="match-bar"><button class="btn" id="matchOpen">从画布匹配</button><span class="hint" id="matchHint">按角色名、文件名、编码从画布角色和素材里找；能对上的打开剧集时已自动补上</span></div>
+    <div class="match" id="matchPanel" hidden>
+      <div class="match-head"><label>画布页 <select id="matchPage"></select></label><span class="hint" id="matchSummary"></span><button class="btn primary" id="matchApply">上传选中的</button></div>
+      <div class="match-list" id="matchList"></div>
+    </div>
+    <div class="media-list" id="mediaList"></div>
+  </div>
+</dialog>
+
+<dialog id="viewer" class="viewer">
+  <div class="dlg-head"><h3 id="viewerTitle">查看</h3><button class="btn ghost" data-close>关闭</button></div>
+  <div class="dlg-body" id="viewerBody"></div>
+  <div class="dlg-foot" id="viewerFoot"></div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const API = "/__production/api";
+const HEAD = { "X-Frameflow-Production": "1" };
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const STAGES = [
+  ["storyboard", "待出关键帧"], ["keyframe_running", "关键帧生成中"], ["keyframe_review", "待审关键帧"],
+  ["keyframe_approved", "待出视频"], ["video_running", "视频生成中"], ["video_review", "待选视频"], ["done", "已定稿"],
+];
+const STAGE_COLOR = { storyboard: "#3a3a3a", keyframe_running: "#8d9aa8", keyframe_review: "#d6bd84", keyframe_approved: "#b8b8b8", video_running: "#8d9aa8", video_review: "#d6bd84", done: "#8fb89c" };
+const state = { overview: null, current: null, detail: null, stamp: "", busy: false };
+/* H3 提示词体检: the same module the canvas queue uses, loaded through the dev server. Optional. */
+let health = null;
+import("/lib/h3-prompt-health.ts").then((m) => { health = m; state.stamp = ""; refresh(true); }).catch(() => {});
+function shotHints(ep, s) {
+  if (!health) return [];
+  const hints = health.h3PromptHealth(s.videoPrompt, { seconds: s.seconds, firstFrame: true, soundMode: ep.video.soundMode, hasDialogue: (s.dialogue || []).length > 0, offscreen: (s.offscreen || []).length > 0, tuning: ep.video.tuning }).map((h) => "视频提示词：" + h.message);
+  const kf = [s.keyframePrompt, ep.keyframe.look].join(" ");
+  if (/[\u3400-\u9fff]/.test(kf)) hints.push("关键帧描述含中文：Flux 基本读不懂中文，keyframePrompt / look 请写英文");
+  if (/\b(?:no|not|never|without|don't|avoid)\b|不要|禁止|没有/i.test(kf)) hints.push("关键帧描述含否定词：Flux 会把被否定的东西画出来，只写要什么");
+  return hints;
+}
+
+function toast(text, bad = false) {
+  const el = $("#toast"); el.textContent = text; el.className = "toast show" + (bad ? " bad" : "");
+  clearTimeout(toast.t); toast.t = setTimeout(() => (el.className = "toast"), bad ? 6000 : 2600);
+}
+async function call(path, options = {}) {
+  const res = await fetch(API + path, { cache: "no-store", ...options, headers: { ...(options.headers || {}), ...(options.method && options.method !== "GET" ? HEAD : {}) } });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.error || `请求失败 ${res.status}`);
+  return body;
+}
+const post = (path, data) => call(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data || {}) });
+async function act(fn, ok) { try { const r = await fn(); if (ok) toast(typeof ok === "function" ? ok(r) : ok); await refresh(true); return r; } catch (e) { toast(e.message, true); } }
+const media = (file) => `/__production/media/${state.current}/${file.split("/").map(encodeURIComponent).join("/")}`;
+const input = (name) => media("inputs/" + name);
+
+/* ── worker tally ── */
+function renderTally() {
+  const o = state.overview; const lamp = $("#lamp"), text = $("#tallyText");
+  if (!o) { lamp.className = "lamp bad"; text.textContent = "连不上画布服务"; return; }
+  const s = o.status || {};
+  if (!o.owner) { lamp.className = "lamp wait"; text.textContent = "执行器在主画布进程（5173）里"; return; }
+  const map = { queued: "on", running: "on", submitting: "on", fetching: "on", idle: "ok", comfy_busy: "wait", paused: "wait", in_flight: "on", offline: "bad", error: "bad", thermal: "bad", held: "bad", starting: "" };
+  lamp.className = "lamp " + (map[s.state] ?? "");
+  text.textContent = s.detail || ({ idle: "空闲，等待任务" }[s.state] || s.state || "");
+  text.title = text.textContent;
+  $("#canvasTag").textContent = "画布：" + (o.canvasName || o.canvas || "主画布");
+}
+
+/* ── guide for other AIs: the same Markdown as docs/生产线-AI接入说明.md, loaded through the dev server ── */
+async function copyAiGuide() {
+  try {
+    const mod = await import("/docs/" + encodeURIComponent("生产线-AI接入说明.md") + "?raw");
+    await navigator.clipboard.writeText(mod.default);
+    toast("已复制给 AI 的说明：连同这一集的剧情一起发给 AI，把它回的 JSON 粘到「新建剧集」");
+  } catch (e) { toast("复制失败：" + (e && e.message ? e.message : e), true); }
+}
+document.addEventListener("click", (e) => { if (e.target.closest("[data-ai-guide]")) copyAiGuide(); });
+
+/* ── rail ── */
+function renderRail() {
+  const list = $("#episodes"); const eps = state.overview?.episodes || [];
+  if (!eps.length) { list.innerHTML = `<li class="empty-rail">还没有剧集。点「＋ 新建」导入一集。</li>`; return; }
+  list.innerHTML = eps.map((e) => {
+    const total = e.shots || 1;
+    const bars = STAGES.map(([k]) => e.stages[k] ? `<i style="width:${(e.stages[k] / total) * 100}%;background:${STAGE_COLOR[k]}"></i>` : "").join("");
+    const busy = e.tasks.inFlight + e.tasks.pending;
+    return `<li><button class="ep ${e.episodeId === state.current ? "active" : ""}" data-ep="${e.episodeId}">
+      <strong>${esc(e.title)}</strong><span class="meter">${bars}</span>
+      <small><span>${e.stages.done}/${e.shots} 定稿</span><span>${e.paused ? "已暂停" : busy ? busy + " 个任务" : e.tasks.needsConfirmation ? "待确认" : ""}</span></small></button><button class="ep-del" data-del-ep="${e.episodeId}" title="删除这一集" aria-label="删除这一集">×</button></li>`;
+  }).join("");
+}
+
+/* ── stage ── */
+function welcome() {
+  $("#stage").innerHTML = `<div class="welcome"><h2>一集一条流水线</h2>
+    <p>每一镜先出几张便宜的关键帧，自动按人脸打分，只给通过的关键帧跑 H3 视频，最后按镜头顺序合成一集。</p>
+    <p>分镜图可选：有分镜图就照它的构图和机位出关键帧（草图、白模截图都行）；没有就按提示词直接出图。角色、分镜图写画布里的名字或编码，打开剧集会自动从画布补上。</p>
+    <div class="flow"><span>分镜（可选）</span><span>关键帧 ×3</span><span>审关键帧</span><span>H3 视频</span><span>选片 → 成片</span></div>
+    <button class="btn primary" id="welcomeNew">新建第一集</button> <button class="btn" data-ai-guide>复制给 AI 的说明</button></div>`;
+  $("#welcomeNew").onclick = () => openEditor(null);
+}
+
+function scoreChip(score) {
+  if (!score) return `<span class="score">检查中</span>`;
+  if (typeof score.face === "number") { const cls = score.face >= 0.6 ? "good" : score.face >= 0.45 ? "mid" : "low"; return `<span class="score ${cls}" title="与角色脸的相似度（insightface）">脸 ${score.face.toFixed(2)}</span>`; }
+  if (typeof score.duration === "number") return `<span class="score ${score.problems?.length ? "low" : "good"}">${score.duration.toFixed(1)}s${score.hasAudio ? " ♪" : ""}</span>`;
+  return "";
+}
+
+function renderStage() {
+  const d = state.detail; if (!d) return welcome();
+  const ep = d.episode; const ar = ep.aspect === "16:9" ? "16/9" : "9/16";
+  const summary = (state.overview?.episodes || []).find((e) => e.episodeId === ep.episodeId);
+  const stages = summary?.stages || {};
+  const missing = d.media.filter((m) => !m.present);
+  const missingNames = new Set(missing.map((m) => m.name));
+  const missingBoards = ep.shots.filter((s) => s.storyboard && missingNames.has(s.storyboard));
+  const confirm = ep.tasks.filter((t) => t.state === "needs_confirmation");
+  const failed = ep.tasks.filter((t) => t.state === "failed" && !ep.tasks.some((o) => o.shotId === t.shotId && o.stage === t.stage && o.createdAt > t.createdAt));
+  const approvedKf = ep.shots.filter((s) => ep.versions.some((v) => v.shotId === s.shotId && v.stage === "keyframe" && v.status === "approved")).length;
+  const videoShots = ep.shots.filter((s) => ep.versions.some((v) => v.shotId === s.shotId && v.stage === "video" && v.status !== "rejected")).length;
+  const pending = ep.tasks.filter((t) => t.state === "pending").length;
+
+  const strip = [["storyboard", "待出关键帧"], ["keyframe_review", "待审关键帧"], ["keyframe_approved", "待出视频"], ["video_review", "待选视频"], ["done", "已定稿"]];
+  const running = (stages.keyframe_running || 0) + (stages.video_running || 0);
+
+  $("#stage").innerHTML = `
+    <header class="slate">
+      <div><div class="kicker">${esc(ep.episodeId)} · ${ep.shots.length} 镜 · ${esc(ep.aspect)} · 视频 ${ep.video.tuning === "understanding" ? "理解优先" : "原配置"}</div>
+        <h2>${esc(ep.title)}${ep.paused ? `<span class="paused">已暂停</span>` : ""}</h2></div>
+      <div class="actions">
+        <button class="btn" id="aMedia">素材${missing.length ? ` <span class="k">缺 ${missing.length}</span>` : ""}</button>
+        <button class="btn" id="aEdit">编辑剧集</button>
+        <button class="btn" id="aPause">${ep.paused ? "继续" : "暂停"}</button>
+        ${pending ? `<button class="btn ghost" id="aCancel">取消未提交 <span class="k">${pending}</span></button>` : ""}
+        <button class="btn primary" id="aKf">出关键帧</button>
+        <button class="btn primary" id="aVd" ${approvedKf ? "" : "disabled"}>出视频 <span class="k">${approvedKf} 镜</span></button>
+        <button class="btn" id="aCut" ${videoShots ? "" : "disabled"} title="按镜头顺序把视频硬切成一条：选定的优先，没选定的用最新一条候选，还没视频的镜头跳过">一键粗剪${videoShots ? ` <span class="k">${videoShots}/${ep.shots.length} 镜</span>` : ""}</button>
+      </div>
+    </header>
+    <section class="strip">${strip.map(([k, label]) => `<div class="${(stages[k] || 0) && k !== "done" && k !== "storyboard" ? "hot" : ""}"><b>${stages[k] || 0}</b><span>${label}</span></div>`).join("")}<div class="${running ? "hot" : ""}"><b>${running}</b><span>生成中</span></div></section>
+    <section class="alerts">
+      ${missing.length ? `<div class="alert warn"><p>还缺 ${missing.length} 个素材：<code>${missing.map((m) => esc(m.name)).join("、")}</code></p><button class="btn" data-open-media>去上传</button>${missingBoards.length ? `<button class="btn ghost" id="aNoBoard" title="把这些镜头的 storyboard 去掉，改为按 keyframePrompt 出关键帧">${missingBoards.length} 镜不用分镜，按提示词出图</button>` : ""}</div>` : ""}
+      ${confirm.map((t) => `<div class="alert"><p><b>${esc(t.shotId)}</b> 的${t.stage === "keyframe" ? "关键帧" : "视频"}提交状态不明，这一集已暂停。${esc(t.error || "")}</p><button class="btn" data-retry="${t.taskId}">重新提交</button><button class="btn ghost" data-abandon="${t.taskId}">放弃</button></div>`).join("")}
+      ${failed.slice(0, 4).map((t) => `<div class="alert"><p><b>${esc(t.shotId)}</b> ${t.stage === "keyframe" ? "关键帧" : "视频"}失败：${esc((t.error || "").slice(0, 220))}</p><button class="btn" data-retry="${t.taskId}">重试</button></div>`).join("")}
+    </section>
+    <section class="reel${state.introduced === ep.episodeId ? "" : " intro"}" style="--ar:${ar}">
+      <div class="legend"><span>镜头</span><span>分镜</span><span>关键帧</span><span>视频</span></div>
+      ${ep.shots.map((s, i) => shotRow(ep, d, s, i)).join("")}
+    </section>`;
+  bindStage(ep);
+  state.introduced = ep.episodeId;
+}
+
+function shotRow(ep, d, s, i) {
+  const vs = (stage) => ep.versions.filter((v) => v.shotId === s.shotId && v.stage === stage).sort((a, b) => (b.status === "approved") - (a.status === "approved") || ((b.score?.face ?? 0) - (a.score?.face ?? 0)) || a.createdAt.localeCompare(b.createdAt));
+  const open = (stage) => ep.tasks.filter((t) => t.shotId === s.shotId && t.stage === stage && ["pending", "reserved", "queued", "running", "fetching"].includes(t.state));
+  const kfs = vs("keyframe"), vds = vs("video");
+  const kfApproved = kfs.find((v) => v.status === "approved");
+  const vdApproved = vds.find((v) => v.status === "approved");
+  const stage = vdApproved ? "done" : open("video").length ? "video_running" : vds.some((v) => v.status === "candidate") ? "video_review" : kfApproved ? "keyframe_approved" : open("keyframe").length ? "keyframe_running" : kfs.some((v) => v.status === "candidate") ? "keyframe_review" : "storyboard";
+  const label = Object.fromEntries(STAGES)[stage];
+  const chipCls = { done: "go", keyframe_review: "amber", video_review: "amber", keyframe_running: "cold", video_running: "cold" }[stage] || "";
+  const sbPresent = d.media.find((m) => m.name === s.storyboard)?.present;
+  const role = ep.roles.find((r) => r.key === s.faceRole);
+  const slots = (tasks) => tasks.map((t) => `<div class="slot ${t.state === "pending" ? "" : "running"}">${t.state === "pending" ? "排队中" : { reserved: "提交中", queued: "ComfyUI 排队", running: "生成中", fetching: "取回中" }[t.state]}</div>`).join("");
+  const cand = (v, video) => `<div class="cand ${video ? "video" : ""} ${v.status}">
+      <div class="frame" data-view="${v.versionId}">${video ? `<video src="${media(v.file)}#t=0.1" preload="metadata" muted playsinline loop></video>` : `<img loading="lazy" src="${media(v.file)}" alt="">`}<span class="sprockets top"></span><span class="sprockets bottom"></span>
+        ${scoreChip(v.score)}${v.status === "approved" ? `<span class="badge">${video ? "选定" : "通过"}</span>` : ""}</div>
+      ${v.score?.problems?.length ? `<div class="problems">${esc(v.score.problems.join("；"))}</div>` : ""}
+      <div class="tools">${v.status === "approved" ? `<button data-decide="${v.versionId}" data-d="candidate" title="取消">撤回</button>` : `<button class="yes" data-decide="${v.versionId}" data-d="approved">${video ? "选定" : "通过"}</button>`}${v.status === "rejected" ? `<button data-decide="${v.versionId}" data-d="candidate">恢复</button>` : `<button class="no" data-decide="${v.versionId}" data-d="rejected">弃</button>`}<button class="zoom" data-view="${v.versionId}" title="放大">⤢</button></div>
+    </div>`;
+  return `<article class="shot" data-stage="${stage}" style="animation-delay:${Math.min(i, 12) * 40}ms">
+    <div class="code">${esc(s.shotId)}<small>${esc(s.title)}</small><span class="chip ${chipCls}">${label}</span>
+      <small>${s.seconds}s${role ? ` · 锁脸 ${esc(role.name)} ${s.faceWeight}` : " · 不锁脸"}</small>
+      <button class="shot-del" data-del-shot="${esc(s.shotId)}" title="从这一集里删掉这一镜">删除镜头</button>
+      ${(() => { const h = shotHints(ep, s); return h.length ? `<details class="health"><summary><span class="chip amber">体检 ${h.length} 条</span></summary><ul>${h.map((m) => `<li>${esc(m)}</li>`).join("")}</ul></details>` : health ? `<div class="health"><span class="chip go">体检通过</span></div>` : ""; })()}</div>
+    <div>${!s.storyboard ? `<div class="frame missing" title="没有分镜图：关键帧按 keyframePrompt 直接出">按提示词出图</div>` : sbPresent ? `<div class="frame" data-sb="${esc(s.storyboard)}"><img loading="lazy" src="${input(s.storyboard)}" alt=""></div>` : `<div class="frame missing">缺分镜图<br><code>${esc(s.storyboard)}</code></div>`}</div>
+    <div class="kf"><div class="col-head"><button class="mini" data-more="${s.shotId}" data-stage="keyframe">＋ 再出 ${ep.keyframe.candidates} 张</button></div>
+      <div class="cands">${kfs.filter((v) => v.status !== "rejected").map((v) => cand(v, false)).join("")}${slots(open("keyframe"))}${kfs.filter((v) => v.status === "rejected").map((v) => cand(v, false)).join("")}${!kfs.length && !open("keyframe").length ? `<div class="slot">还没出</div>` : ""}</div></div>
+    <div class="vd"><div class="col-head">${kfApproved ? `<button class="mini" data-more="${s.shotId}" data-stage="video">＋ 再出 1 条</button>` : ""}</div>
+      ${kfApproved || vds.length ? `<div class="cands">${vds.filter((v) => v.status !== "rejected").map((v) => cand(v, true)).join("")}${slots(open("video"))}${vds.filter((v) => v.status === "rejected").map((v) => cand(v, true)).join("")}${!vds.length && !open("video").length ? `<div class="slot" style="width:138px">关键帧已通过<br>可以出视频</div>` : ""}</div>` : `<div class="locked">关键帧通过后解锁</div>`}</div>
+  </article>`;
+}
+
+function bindStage(ep) {
+  const id = ep.episodeId;
+  $("#aMedia").onclick = openMedia; $("#aEdit").onclick = () => openEditor(state.detail.definition);
+  $("#aPause").onclick = () => act(() => post(`/episodes/${id}/pause`, { paused: !ep.paused }), ep.paused ? "已继续" : "已暂停（正在跑的不受影响）");
+  $("#aKf").onclick = () => act(() => post(`/episodes/${id}/enqueue`, { stage: "keyframe" }), (r) => r.created ? `排了 ${r.created} 张关键帧` : "没有需要新出关键帧的镜头");
+  $("#aVd").onclick = () => act(() => post(`/episodes/${id}/enqueue`, { stage: "video" }), (r) => r.created ? `排了 ${r.created} 条视频${r.skipped.length ? `，${r.skipped.length} 镜关键帧未通过已跳过` : ""}` : "没有需要新出视频的镜头");
+  $("#aCut").onclick = async () => {
+    $("#aCut").disabled = true; toast("开始粗剪，几分钟后完成…");
+    const r = await act(() => post(`/episodes/${id}/assemble`, { partial: true }), (r) => `粗剪好了：${r.clips} 镜${r.unchosen.length ? `（${r.unchosen.join("、")} 还没选定，用的最新候选）` : ""}${r.skipped.length ? `，跳过还没视频的 ${r.skipped.join("、")}` : ""}`);
+    if (r?.file) openCut(r);
+  };
+  const delShots = $("#stage").querySelectorAll("[data-del-shot]");
+  delShots.forEach((b) => (b.onclick = () => {
+    const shotId = b.dataset.delShot;
+    if (!confirm(`从「${ep.title}」里删掉镜头 ${shotId}？
+已经出的关键帧和视频文件留在磁盘上，只是不再显示；没提交的任务会取消。`)) return;
+    act(() => post(`/episodes/${id}/delete-shot`, { shotId }), `已删除镜头 ${shotId}`);
+  }));
+  const noBoard = $("#aNoBoard"); if (noBoard) noBoard.onclick = async () => {
+    const def = structuredClone(state.detail.definition); const media = new Set(state.detail.media.filter((m) => !m.present).map((m) => m.name));
+    const shots = def.shots.filter((s) => s.storyboard && media.has(s.storyboard));
+    if (!confirm(`${shots.map((s) => s.shotId).join("、")} 这 ${shots.length} 镜去掉分镜图，改为按 keyframePrompt 直接出关键帧（构图靠提示词写清景别、机位、站位）。以后在「编辑剧集」里把 storyboard 加回来就能恢复。继续？`)) return;
+    for (const s of shots) s.storyboard = null;
+    await act(() => call(`/episodes/${id}/definition`, { method: "PUT", body: JSON.stringify(def) }), `${shots.length} 镜改为按提示词出图`);
+  };
+  const cancel = $("#aCancel"); if (cancel) cancel.onclick = () => act(() => post(`/episodes/${id}/cancel`), (r) => `取消了 ${r.cancelled} 个未提交任务`);
+  const stage = $("#stage");
+  stage.querySelectorAll("[data-open-media]").forEach((b) => (b.onclick = openMedia));
+  stage.querySelectorAll("[data-retry]").forEach((b) => (b.onclick = () => act(() => post(`/episodes/${id}/retry`, { taskId: b.dataset.retry }), "已重新排队")));
+  stage.querySelectorAll("[data-abandon]").forEach((b) => (b.onclick = () => act(() => post(`/episodes/${id}/abandon`, { taskId: b.dataset.abandon }), "已放弃")));
+  stage.querySelectorAll("[data-decide]").forEach((b) => (b.onclick = () => act(() => post(`/episodes/${id}/decide`, { versionId: b.dataset.decide, decision: b.dataset.d }))));
+  stage.querySelectorAll("[data-more]").forEach((b) => (b.onclick = () => act(() => post(`/episodes/${id}/enqueue`, { stage: b.dataset.stage, shotIds: [b.dataset.more], count: b.dataset.stage === "video" ? 1 : ep.keyframe.candidates }), (r) => `${b.dataset.more} 排了 ${r.created} 个`)));
+  stage.querySelectorAll("[data-view]").forEach((el) => (el.onclick = () => openViewer(el.dataset.view)));
+  stage.querySelectorAll(".cand.video video").forEach((v) => { const f = v.closest(".frame"); f.onmouseenter = () => v.play().catch(() => {}); f.onmouseleave = () => { v.pause(); }; });
+}
+
+/* ── viewer: candidate next to its storyboard ── */
+function openViewer(versionId) {
+  const ep = state.detail.episode; const v = ep.versions.find((x) => x.versionId === versionId); if (!v) return;
+  const s = ep.shots.find((x) => x.shotId === v.shotId);
+  const source = v.stage === "video" ? ep.versions.find((x) => x.versionId === ep.tasks.find((t) => t.taskId === v.taskId)?.sourceVersionId) : null;
+  $("#viewerTitle").textContent = `${v.shotId} · ${v.stage === "keyframe" ? "关键帧" : "视频"} · 种子 ${v.seed}`;
+  const fig = (src, cap, video) => `<figure>${video ? `<video src="${src}" controls autoplay playsinline></video>` : `<img src="${src}" alt="">`}<figcaption>${cap}</figcaption></figure>`;
+  $("#viewerBody").innerHTML = [
+    s.storyboard ? fig(input(s.storyboard), "分镜图") : "",
+    v.extra?.depth ? fig(media(v.extra.depth), "深度图（构图依据）") : "",
+    source ? fig(media(source.file), "起始关键帧") : "",
+    fig(media(v.file), `${v.stage === "keyframe" ? "关键帧" : "视频"}${v.score?.face != null ? ` · 人脸相似度 ${v.score.face.toFixed(2)}` : ""}${v.score?.problems?.length ? ` · ${esc(v.score.problems.join("；"))}` : ""}`, v.stage === "video"),
+  ].join("");
+  $("#viewerFoot").innerHTML = `<button class="btn ghost" data-v="rejected">弃用</button><button class="btn ghost" data-v="rescore">重新检查</button><button class="btn primary" data-v="approved">${v.stage === "video" ? "选定这条" : "通过这张"}</button>`;
+  $("#viewerFoot").querySelectorAll("[data-v]").forEach((b) => (b.onclick = async () => {
+    if (b.dataset.v === "rescore") await act(() => post(`/episodes/${ep.episodeId}/rescore`, { versionId }), "已重新排队检查");
+    else await act(() => post(`/episodes/${ep.episodeId}/decide`, { versionId, decision: b.dataset.v }));
+    $("#viewer").close();
+  }));
+  $("#viewer").showModal();
+}
+
+/* ── rough cut result ── */
+function openCut(r) {
+  $("#viewerTitle").textContent = "粗剪";
+  $("#viewerBody").innerHTML = `<figure><video src="${media(r.file)}" controls autoplay playsinline></video><figcaption>${esc(r.file)} · ${r.clips} 镜</figcaption></figure>`;
+  $("#viewerFoot").innerHTML = `<a class="btn" href="${media(r.file)}" download>下载</a>`;
+  $("#viewer").showModal();
+}
+
+/* ── editor ── */
+let editingId = null;
+async function openEditor(definition) {
+  editingId = definition ? state.current : null;
+  $("#editorTitle").textContent = definition ? "编辑剧集" : "新建剧集";
+  $("#editorErr").textContent = "";
+  $("#editorText").value = JSON.stringify(definition || (await call("/template")), null, 2);
+  $("#importRoles").hidden = !bridge();
+  showPending();
+  $("#editor").showModal();
+}
+/* ── roles from the canvas (window.opener bridge, same origin) ── */
+const bridge = () => { try { return (window.opener && window.opener.frameflowProduction) || (window.parent !== window && window.parent.frameflowProduction) || null; } catch { return null; } };
+const pendingUploads = new Map();
+const IMAGE_EXT = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp" }, AUDIO_EXT = { "audio/wav": "wav", "audio/x-wav": "wav", "audio/wave": "wav", "audio/mpeg": "mp3", "audio/flac": "flac", "audio/mp4": "m4a" };
+function extOf(media, audio) {
+  const m = /\.([a-z0-9]+)$/i.exec(media.filename || ""); const e = m && m[1].toLowerCase();
+  const ok = audio ? ["wav", "mp3", "flac", "m4a"] : ["png", "jpg", "jpeg", "webp"];
+  return e && ok.includes(e) ? e : (audio ? AUDIO_EXT : IMAGE_EXT)[media.blob.type] || (audio ? "wav" : "png");
+}
+function showPending() { $("#pendingNote").textContent = pendingUploads.size ? `保存时上传 ${pendingUploads.size} 个角色素材` : ""; }
+$("#importRoles").onclick = async () => {
+  try {
+    const roles = await bridge().listRoles();
+    if (!roles.length) { toast("这个画布页没有角色", true); return; }
+    $("#rolePick").innerHTML = roles.map((r) => `<label><input type="checkbox" value="${esc(r.roleId)}"><b>${esc(r.displayName)}</b><small>${[r.hasFace ? "脸" : "", r.hasAppearance ? "外观" : "", r.hasVoice ? "声音" : ""].filter(Boolean).join(" · ") || "无素材"}</small></label>`).join("");
+    $("#rolesDlg").showModal();
+  } catch (e) { toast(`读不到画布角色：${e.message}`, true); }
+};
+$("#confirmRoles").onclick = async () => {
+  const ids = [...$("#rolePick").querySelectorAll("input:checked")].map((i) => i.value);
+  if (!ids.length) { $("#rolesDlg").close(); return; }
+  let doc; try { doc = JSON.parse($("#editorText").value); } catch { toast("先把编辑框里的 JSON 改成合法格式", true); return; }
+  doc.roles = Array.isArray(doc.roles) ? doc.roles : [];
+  for (const id of ids) {
+    try {
+      const role = await bridge().exportRole(id);
+      const key = "r_" + id.replace(/[^A-Za-z0-9]/g, "").slice(-8);
+      const entry = { key, name: role.displayName.slice(0, 40), description: (role.description || "").slice(0, 400), face: null, appearance: [], voice: null };
+      if (role.face) { entry.face = `${key}_face.${extOf(role.face)}`; pendingUploads.set(entry.face, role.face.blob); }
+      if (role.appearance) { const n = `${key}_full.${extOf(role.appearance)}`; entry.appearance = [n]; pendingUploads.set(n, role.appearance.blob); }
+      if (role.voice) { entry.voice = `${key}_voice.${extOf(role.voice, true)}`; pendingUploads.set(entry.voice, role.voice.blob); }
+      doc.roles = doc.roles.filter((r) => r.key !== key).concat(entry);
+    } catch (e) { toast(`${id}：${e.message}`, true); }
+  }
+  $("#editorText").value = JSON.stringify(doc, null, 2);
+  $("#rolesDlg").close(); showPending();
+  toast("角色已写入，镜头里用 key 引用（roles / faceRole / dialogue.roleId）");
+};
+
+$("#fillTemplate").onclick = async () => { $("#editorText").value = JSON.stringify(await call("/template"), null, 2); };
+$("#saveEditor").onclick = async () => {
+  const text = $("#editorText").value;
+  try {
+    JSON.parse(text);
+    if (editingId) { await call(`/episodes/${editingId}/definition`, { method: "PUT", body: text }); toast("已保存"); }
+    else { const r = await call("/episodes", { method: "POST", body: text }); state.current = r.episodeId; location.hash = r.episodeId; toast("剧集已建好，下一步上传素材"); }
+    $("#editor").close(); await refresh(true);
+    if (pendingUploads.size) { const pairs = [...pendingUploads.entries()]; pendingUploads.clear(); showPending(); await upload(pairs); }
+    if (!editingId) openMedia();
+  } catch (e) { $("#editorErr").textContent = e.message; }
+};
+$("#newEp").onclick = () => openEditor(null);
+
+/* ── media ── */
+function openMedia() { renderMedia(); $("#mediaDlg").showModal(); }
+function renderMedia() {
+  const d = state.detail; if (!d) return;
+  $("#mediaList").innerHTML = d.media.map((m) => `<div class="media ${m.present ? "" : "miss"}">
+    <div class="frame ${m.present ? "" : "missing"}">${m.present ? `<img src="${input(m.name)}?${Date.now()}" alt="">` : "缺"}</div>
+    <div class="name">${esc(m.name)}</div><label>${m.present ? "替换" : "选择文件"}<input type="file" accept="image/*,audio/*" data-name="${esc(m.name)}"></label></div>`).join("");
+  $("#mediaList").querySelectorAll("input[type=file]").forEach((inp) => (inp.onchange = () => inp.files[0] && upload([[inp.dataset.name, inp.files[0]]])));
+}
+async function upload(pairs) {
+  let done = 0;
+  for (const [name, file] of pairs) {
+    try { await call(`/episodes/${state.current}/media/${encodeURIComponent(name)}`, { method: "PUT", body: file }); done++; }
+    catch (e) { toast(`${name}：${e.message}`, true); }
+  }
+  if (done) toast(`上传了 ${done} 个文件`);
+  await refresh(true); renderMedia();
+}
+
+/* ── 从画布匹配: same-origin, read-only view of this canvas's roles and assets ── */
+let canvasModules = null;
+const canvasLib = () => (canvasModules ??= Promise.all([import("/lib/production-canvas-library.ts"), import("/lib/production-canvas-match.ts")]).then(([library, match]) => ({ ...library, ...match })).catch((e) => { canvasModules = null; throw e; }));
+const preferredPage = () => { try { return bridge()?.currentPageId?.() || ""; } catch { return ""; } };
+const missingNames = () => (state.detail?.media || []).filter((m) => !m.present).map((m) => m.name);
+const SLOT_LABEL = { face: "脸部参考", appearance: "外观", voice: "声音", storyboard: "分镜/场景图", audio: "台词音频" };
+function slotLabel(slot) {
+  if (slot.kind === "storyboard") return `${slot.shotIds.join("、") || "镜头"} 的分镜/场景图`;
+  return `${slot.roleName || slot.roleKey || "角色"} · ${slot.kind === "appearance" ? (slot.index ? `外观 ${slot.index + 1}` : "主外观") : SLOT_LABEL[slot.kind]}${slot.kind === "audio" && slot.shotIds.length ? `（${slot.shotIds.join("、")}）` : ""}`;
+}
+/** Canvas source → asset id. */
+function sourceAsset(m, lib, source) {
+  if (source.type === "asset") return source.assetId;
+  const role = lib.roles.find((r) => r.roleId === source.roleId && (!source.pageId || r.pageIds.includes(source.pageId) || !r.pageIds.length)) || lib.roles.find((r) => r.roleId === source.roleId);
+  return role ? m.rolePartAsset(role, source.part) : null;
+}
+/** Bytes as the file the episode names: images re-encoded when the extension differs, sounds to WAV for .wav. */
+async function asNamedFile(media, name) {
+  const ext = (/\.([a-z0-9]+)$/i.exec(name)?.[1] || "").toLowerCase();
+  const imageType = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp" }[ext];
+  if (imageType && media.kind === "image" && media.blob.type !== imageType) {
+    const bitmap = await createImageBitmap(media.blob);
+    const c = document.createElement("canvas"); c.width = bitmap.width; c.height = bitmap.height; c.getContext("2d").drawImage(bitmap, 0, 0); bitmap.close?.();
+    return await new Promise((resolve, reject) => c.toBlob((b) => (b ? resolve(b) : reject(new Error("图片转换失败"))), imageType, 0.95));
+  }
+  if (ext === "wav" && media.kind === "audio" && !/wav|wave/i.test(media.blob.type) && !/\.wav$/i.test(media.filename || "")) {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    try { return wavBlob(await ctx.decodeAudioData(await media.blob.arrayBuffer())); } finally { ctx.close?.(); }
+  }
+  return media.blob;
+}
+function wavBlob(buffer) {
+  const ch = buffer.numberOfChannels, len = buffer.length, rate = buffer.sampleRate, view = new DataView(new ArrayBuffer(44 + len * ch * 2));
+  const str = (o, s) => [...s].forEach((c, i) => view.setUint8(o + i, c.charCodeAt(0)));
+  str(0, "RIFF"); view.setUint32(4, 36 + len * ch * 2, true); str(8, "WAVE"); str(12, "fmt "); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, ch, true);
+  view.setUint32(24, rate, true); view.setUint32(28, rate * ch * 2, true); view.setUint16(32, ch * 2, true); view.setUint16(34, 16, true); str(36, "data"); view.setUint32(40, len * ch * 2, true);
+  const data = [...Array(ch)].map((_, i) => buffer.getChannelData(i));
+  for (let i = 0, o = 44; i < len; i++) for (let c = 0; c < ch; c++, o += 2) { const v = Math.max(-1, Math.min(1, data[c][i])); view.setInt16(o, v < 0 ? v * 0x8000 : v * 0x7fff, true); }
+  return new Blob([view], { type: "audio/wav" });
+}
+async function fillFromCanvas(entries) {
+  const m = await canvasLib(); const pairs = [], failed = [];
+  for (const { name, assetId } of entries) {
+    try { pairs.push([name, await asNamedFile(await m.readCanvasMedia(assetId), name)]); } catch (e) { failed.push(`${name}：${e.message}`); }
+  }
+  if (failed.length) toast(failed.join("；"), true);
+  if (pairs.length) await upload(pairs);
+  return pairs.length;
+}
+
+/* Automatic: when an episode shows missing files, fill the ones the canvas answers with certainty. */
+const autoTried = new Set();
+let autoRunning = false;
+async function maybeAutoFill() {
+  const d = state.detail; const names = missingNames();
+  if (!d || !names.length || autoRunning) return;
+  const key = d.episode.episodeId + "|" + names.join("|");
+  if (autoTried.has(key)) return;
+  autoTried.add(key); autoRunning = true;
+  try {
+    const m = await canvasLib(); const lib = await m.readCanvasLibrary();
+    if (lib.empty) return;
+    const { pageId, plan } = m.planFill(m.describeSlots(d.episode, names), lib.roles, lib.assets, lib.pages.map((p) => p.id), preferredPage());
+    const entries = plan.filter((p) => p.auto).map((p) => ({ name: p.slot.name, assetId: sourceAsset(m, lib, { ...p.suggestion.source, pageId }) })).filter((e) => e.assetId);
+    if (!entries.length) return;
+    const filled = await fillFromCanvas(entries);
+    const left = missingNames().length;
+    if (filled) toast(`已从画布自动补上 ${filled} 个素材${left ? `，还缺 ${left} 个：点「素材」→「从画布匹配」手动选` : ""}`);
+  } catch (e) { console.warn("[生产线] 从画布自动匹配失败", e); }
+  finally { autoRunning = false; }
+}
+
+/* Manual: one row per missing file, preselected with the best guess. */
+const match = { lib: null, rows: [], urls: [] };
+$("#matchOpen").onclick = async () => {
+  const panel = $("#matchPanel");
+  if (!panel.hidden) { panel.hidden = true; return; }
+  try {
+    const m = await canvasLib(); match.lib = await m.readCanvasLibrary();
+    if (match.lib.empty) { toast("这个端口的画布里没有角色和素材（5173 和 5174 的素材库是分开的）", true); return; }
+    const names = missingNames();
+    if (!names.length) { toast("素材都齐了"); return; }
+    const { pageId } = m.planFill(m.describeSlots(state.detail.episode, names), match.lib.roles, match.lib.assets, match.lib.pages.map((p) => p.id), preferredPage());
+    $("#matchPage").innerHTML = `<option value="">全部画布页</option>` + match.lib.pages.map((p) => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
+    $("#matchPage").value = pageId;
+    panel.hidden = false; renderMatch();
+  } catch (e) { toast(`读不到画布素材库：${e.message}`, true); }
+};
+$("#matchPage").onchange = () => renderMatch();
+async function renderMatch() {
+  const m = await canvasLib(); const lib = match.lib; if (!lib) return;
+  match.urls.forEach((u) => URL.revokeObjectURL(u)); match.urls = [];
+  const pageId = $("#matchPage").value;
+  const roles = lib.roles.filter(m.visibleOn(pageId)), assets = lib.assets.filter(m.visibleOn(pageId));
+  const slots = m.describeSlots(state.detail.episode, missingNames());
+  match.rows = slots.map((slot) => {
+    const options = [];
+    if (slot.kind !== "storyboard") for (const role of roles) {
+      const parts = slot.media === "audio" ? ["voice"] : ["face", "appearance", ...role.appearanceAssetIds.map((_, i) => `appearance:${i}`)];
+      for (const part of parts) { const assetId = m.rolePartAsset(role, part); if (assetId && !options.some((o) => o.assetId === assetId && o.group === role.displayName)) options.push({ group: `角色：${role.displayName}`, label: `${role.displayName} · ${m.partLabel(part)}`, assetId, key: `r|${role.roleId}|${part}` }); }
+    }
+    for (const asset of assets) if (asset.kind === slot.media) options.push({ group: slot.media === "audio" ? "画布声音" : "画布图片", label: asset.filename, assetId: asset.assetId, key: `a|${asset.assetId}` });
+    const s = m.suggest(slot, roles, assets);
+    const pick = s ? (s.source.type === "asset" ? `a|${s.source.assetId}` : `r|${s.source.roleId}|${s.source.part}`) : "";
+    return { slot, options, suggestion: s, pick: options.some((o) => o.key === pick) ? pick : "" };
+  });
+  const groups = (row) => [...new Set(row.options.map((o) => o.group))].map((g) => `<optgroup label="${esc(g)}">${row.options.filter((o) => o.group === g).map((o) => `<option value="${esc(o.key)}">${esc(o.label)}</option>`).join("")}</optgroup>`).join("");
+  $("#matchList").innerHTML = match.rows.map((row, i) => `<div class="match-row">
+      <div class="thumb" data-thumb="${i}">${row.slot.media === "audio" ? "♪" : ""}</div>
+      <div><div class="name">${esc(row.slot.name)}</div><small>${esc(slotLabel(row.slot))}</small>
+        <small class="${row.suggestion ? (row.suggestion.ambiguous || row.suggestion.score < m.AUTO_FILL_SCORE ? "ask" : "ok") : ""}" data-why="${i}">${row.suggestion ? esc(row.suggestion.reason) + (row.suggestion.ambiguous ? " · 有多个同样像的，请确认" : row.suggestion.score < m.AUTO_FILL_SCORE ? " · 不太确定，请确认" : "") : "没找到对得上的，手动选"}</small></div>
+      <select data-pick="${i}"><option value="">不上传</option>${groups(row)}</select></div>`).join("") || `<p class="hint">没有缺的素材</p>`;
+  $("#matchList").querySelectorAll("[data-pick]").forEach((sel) => {
+    const row = match.rows[+sel.dataset.pick]; sel.value = row.pick;
+    sel.onchange = () => { row.pick = sel.value; $(`[data-why="${sel.dataset.pick}"]`).textContent = sel.value ? "手动选择" : "不上传"; showThumb(+sel.dataset.pick); summary(); };
+    showThumb(+sel.dataset.pick);
+  });
+  summary();
+}
+function summary() { const n = match.rows.filter((r) => r.pick).length; $("#matchSummary").textContent = `${match.rows.length} 个缺的，选好了 ${n} 个`; $("#matchApply").disabled = !n; }
+async function showThumb(i) {
+  const row = match.rows[i]; const el = $(`[data-thumb="${i}"]`); if (!el) return;
+  const option = row.options.find((o) => o.key === row.pick);
+  el.style.backgroundImage = "";
+  if (!option || row.slot.media !== "image") return;
+  try { const m = await canvasLib(); const media = await m.readCanvasMedia(option.assetId); if (row.pick !== option.key) return; const url = URL.createObjectURL(media.blob); match.urls.push(url); el.style.backgroundImage = `url("${url}")`; } catch { el.textContent = "?"; }
+}
+$("#matchApply").onclick = async () => {
+  const entries = match.rows.filter((r) => r.pick).map((r) => ({ name: r.slot.name, assetId: r.options.find((o) => o.key === r.pick)?.assetId })).filter((e) => e.assetId);
+  if (!entries.length) return;
+  $("#matchApply").disabled = true;
+  try { await fillFromCanvas(entries); } finally { if (missingNames().length) await renderMatch(); else $("#matchPanel").hidden = true; }
+};
+$("#mediaDlg").addEventListener("close", () => { $("#matchPanel").hidden = true; match.urls.forEach((u) => URL.revokeObjectURL(u)); match.urls = []; });
+const drop = $("#drop");
+["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", (e) => {
+  const wanted = new Set((state.detail?.media || []).map((m) => m.name));
+  const files = [...e.dataTransfer.files];
+  const pairs = files.filter((f) => wanted.has(f.name)).map((f) => [f.name, f]);
+  const extra = files.filter((f) => !wanted.has(f.name)).map((f) => f.name);
+  if (extra.length) toast(`这些文件名不在剧集里，没上传：${extra.join("、")}`, true);
+  if (pairs.length) upload(pairs);
+});
+
+document.querySelectorAll("[data-close]").forEach((b) => (b.onclick = () => b.closest("dialog").close()));
+$("#viewer").addEventListener("close", () => $("#viewerBody").querySelectorAll("video").forEach((v) => v.pause()));
+$("#episodes").addEventListener("click", (e) => {
+  const del = e.target.closest("[data-del-ep]"); if (!del) return;
+  e.stopPropagation();
+  const id = del.dataset.delEp; const ep = (state.overview?.episodes || []).find((x) => x.episodeId === id);
+  if (!confirm(`删除整集「${ep?.title || id}」？
+剧集和它的素材、关键帧、视频会移到 runtime/production/trash/ 里（不会真删，搬回来就能恢复）。正在 ComfyUI 里跑的任务要先跑完。`)) return;
+  act(() => post(`/episodes/${id}/delete`), (r) => `已删除，文件在 runtime/production/${r.trash}`).then((r) => { if (r && state.current === id) { state.current = null; location.hash = ""; refresh(true); } });
+}, true);
+$("#episodes").addEventListener("click", (e) => { const b = e.target.closest("[data-ep]"); if (b) { state.current = b.dataset.ep; location.hash = state.current; state.stamp = ""; refresh(true); } });
+
+/* ── polling ── */
+async function refresh(force = false) {
+  if (state.busy && !force) return;
+  state.busy = true;
+  try {
+    state.overview = await call("/overview");
+    const eps = state.overview.episodes;
+    if (!state.current || !eps.some((e) => e.episodeId === state.current)) state.current = (location.hash.slice(1) && eps.some((e) => e.episodeId === location.hash.slice(1))) ? location.hash.slice(1) : eps[0]?.episodeId || null;
+    renderTally(); renderRail();
+    if (!state.current) { state.detail = null; state.stamp = ""; welcome(); return; }
+    const detail = await call(`/episodes/${state.current}`);
+    const stamp = detail.episode.updatedAt + "|" + detail.media.map((m) => +m.present).join("") + "|" + JSON.stringify(state.overview.episodes.find((e) => e.episodeId === state.current)?.stages);
+    state.detail = detail;
+    // Re-render only when the ledger changed, so a playing video or a scroll position is not reset every poll.
+    if (force || stamp !== state.stamp) { const reel = $(".reel"); const top = reel?.scrollTop; state.stamp = stamp; renderStage(); if (top) $(".reel").scrollTop = top; }
+    void maybeAutoFill();
+  } catch (e) { state.overview = null; renderTally(); }
+  finally { state.busy = false; }
+}
+refresh(true);
+setInterval(() => { if (!document.hidden && !document.querySelector("dialog[open]")) refresh(); }, 3000);
+</script>
+</body>
+</html>

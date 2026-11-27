@@ -1,0 +1,187 @@
+/*
+ * Panels, drawers, dialogs and node chrome in the black / white / grey direction.
+ * Loaded last (see app/layout.tsx). Colours come from app/tokens.css only.
+ *
+ * The six rules (docs/调研-界面设计方案.md §2.1):
+ *   1. hairlines instead of boxes inside boxes      4. one white primary button per screen
+ *   2. more whitespace                              5. everything on one left edge
+ *   3. hierarchy by weight and brightness           6. no gradients, glow or glass
+ *
+ * CSS only: no markup or behaviour changes.
+ */
+
+/* ---------- 6. no glass, no gradients ---------- */
+.workspace > .app-bar { background: var(--ff-bg); backdrop-filter: none; -webkit-backdrop-filter: none; }
+:is(.workspace,body) :is(.canvas-quick-menu, .final-cut-menu, .h3-workflow-menu, .add-dock-menu, .toast, .h3-creative-dock, .canvas-area .tlui-toolbar, .canvas-area .tlui-main-toolbar) {
+  backdrop-filter: none; -webkit-backdrop-filter: none;
+}
+:is(.workspace,body) :is(.canvas-quick-menu, .final-cut-menu, .h3-workflow-menu, .add-dock-menu) { background: var(--ff-raised); }
+:is(.workspace,body) .toast { background: var(--ff-raised); }
+:is(.workspace,body) .role-empty { background: none; }
+
+/* ---------- panel shell ---------- */
+:is(.workspace,body) :is(.asset-library-drawer, .generation-info-panel, .ff-panel, .media-trash-dialog, .canvas-toolkit, .flux-mask-panel) {
+  background: var(--ff-surface);
+  border: 1px solid var(--ff-border);
+  border-radius: 12px;
+}
+:is(.workspace,body) :is(.asset-library-drawer, .generation-info-panel) > header {
+  padding: 18px 20px 14px;
+  background: transparent;
+  border-bottom: 1px solid var(--ff-border-soft);
+}
+:is(.workspace,body) :is(.asset-library-drawer, .generation-info-panel) > header h2 { margin: 2px 0 0; font-size: 16px; font-weight: 600; letter-spacing: .01em; }
+:is(.workspace,body) :is(.asset-library-drawer, .generation-info-panel, .ff-panel) header small { font-size: 12px; letter-spacing: .04em; }
+
+/* ---------- 4. buttons: outline is the default, white is the one primary ---------- */
+:is(.workspace,body) :is(
+  .reference-actions button, .reference-item button,
+  .asset-library-imports button, .asset-library-role button, .asset-library-more,
+  .role-section-title button, .id-copy-row button, .asset-id-copy,
+  .role-main-action, .backup-secondary, .ff-file-button, .shot-queue-confirm-actions button
+) {
+  border: 1px solid var(--ff-border-strong);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ff-text);
+  font-weight: 400;
+  box-shadow: none;
+}
+:is(.workspace,body) :is(
+  .reference-actions button, .reference-item button,
+  .asset-library-imports button, .asset-library-role button, .asset-library-more,
+  .role-section-title button, .id-copy-row button, .asset-id-copy,
+  .role-main-action, .backup-secondary, .ff-file-button, .shot-queue-confirm-actions button
+):hover:not(:disabled) { border-color: var(--ff-text-3); background: var(--ff-raised); color: var(--ff-text); }
+
+/* the queue's own primary action */
+:is(.workspace,body) .shot-queue-submit-all button {
+  min-height: 36px;
+  border: 1px solid transparent; border-radius: 8px;
+  background: var(--ff-white); color: var(--ff-ink);
+  font-size: 13px; font-weight: 600;
+}
+:is(.workspace,body) .shot-queue-submit-all button:hover:not(:disabled) { background: #fff; }
+:is(.workspace,body) .shot-queue-confirm { border: 0; border-left: 2px solid var(--ff-warn); border-radius: 0; background: transparent; padding: 4px 0 4px 14px; color: var(--ff-text); }
+:is(.workspace,body) .shot-queue-confirm-actions button:first-child { border-color: var(--ff-text-3); font-weight: 600; }
+
+/* ---------- 镜头队列 ---------- */
+:is(.workspace,body) .shot-queue-body { gap: 16px; padding: 18px 20px 28px; }
+:is(.workspace,body) .shot-queue-body .reference-actions { gap: 6px; }
+:is(.workspace,body) .shot-queue-body .reference-actions button { min-height: 30px; padding: 0 12px; font-size: 12px; }
+:is(.workspace,body) .shot-queue-body textarea { background: var(--ff-bg); border: 1px solid var(--ff-border); border-radius: 8px; padding: 12px 14px; color: var(--ff-text); }
+:is(.workspace,body) .shot-queue-body textarea:focus { outline: none; border-color: var(--ff-text-3); }
+/* check-up hints: one scannable row each instead of one block of text */
+:is(.workspace,body) .shot-queue-body .backup-note {
+  margin: 0; padding: 9px 0;
+  border-top: 1px solid var(--ff-border-soft);
+  color: var(--ff-text-2); font-size: 12px; line-height: 1.65;
+}
+:is(.workspace,body) .shot-queue-body .backup-note + .backup-note { margin-top: -16px; }
+:is(.workspace,body) .shot-queue-shot { border: 0; border-top: 1px solid var(--ff-border-soft); border-radius: 0; background: transparent; padding: 10px 0; }
+:is(.workspace,body) .shot-queue-delete { color: var(--ff-text-3); }
+:is(.workspace,body) .shot-queue-delete:hover { color: var(--ff-bad); }
+
+/* ---------- 体检列表 (components/queue-checkup-list.tsx) ---------- */
+:is(.workspace,body) .checkup { display: grid; gap: 0; border-top: 1px solid var(--ff-border-soft); }
+:is(.workspace,body) .checkup > summary { display: flex; align-items: baseline; gap: 10px; padding: 10px 0; list-style: none; font-size: 13px; font-weight: 600; color: var(--ff-text); }
+:is(.workspace,body) .checkup summary::-webkit-details-marker { display: none; }
+:is(.workspace,body) .checkup summary::before { content: "▸"; flex: none; width: 10px; color: var(--ff-text-3); font-size: 12px; }
+:is(.workspace,body) .checkup details[open] > summary::before,
+:is(.workspace,body) .checkup[open] > summary::before { content: "▾"; }
+:is(.workspace,body) .checkup > summary small { color: var(--ff-text-3); font-size: 12px; font-weight: 400; }
+:is(.workspace,body) .checkup-shot { border-top: 1px solid var(--ff-border-soft); }
+:is(.workspace,body) .checkup-shot > summary { display: flex; align-items: baseline; gap: 10px; padding: 9px 0; list-style: none; font-size: 13px; color: var(--ff-text); }
+:is(.workspace,body) .checkup-shot > summary b { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+:is(.workspace,body) .checkup-shot > summary small { margin-left: auto; flex: none; display: inline-flex; gap: 10px; color: var(--ff-text-3); font-size: 12px; }
+:is(.workspace,body) .checkup-shot ul { margin: 0; padding: 0 0 10px 20px; list-style: none; display: grid; gap: 6px; }
+:is(.workspace,body) .checkup-shot li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 8px; align-items: start; color: var(--ff-text-2); font-size: 12px; line-height: 1.65; }
+:is(.workspace,body) .checkup-mark { width: 8px; height: 8px; margin-top: 6px; box-sizing: border-box; }
+:is(.workspace,body) .checkup-mark.warn { width: 0; height: 0; margin-top: 5px; border: 5px solid transparent; border-top: 0; border-bottom: 9px solid var(--ff-warn); }
+:is(.workspace,body) .checkup-mark.hint { border: 1px solid var(--ff-text-3); border-radius: 50%; }
+:is(.workspace,body) .checkup-mark.bad { background: var(--ff-bad); transform: rotate(45deg); border-radius: 1px; }
+:is(.workspace,body) .checkup-count.warn { color: var(--ff-warn); }
+:is(.workspace,body) .checkup-count.bad { color: var(--ff-bad); }
+
+/* ---------- 素材库 ---------- */
+:is(.workspace,body) .asset-library-toolbar { gap: 14px; padding: 16px 20px 0; border-bottom: 1px solid var(--ff-border-soft); }
+:is(.workspace,body) .asset-library-imports { gap: 6px; }
+:is(.workspace,body) .asset-library-imports button { min-height: 30px; font-size: 12px; }
+:is(.workspace,body) .asset-library-filters input,
+:is(.workspace,body) .asset-library-filters select,
+:is(.workspace,body) .asset-library-role select { height: 30px; background: var(--ff-bg); border: 1px solid var(--ff-border); color: var(--ff-text); font-size: 12px; }
+/* tabs: text with an underline, not filled pills */
+:is(.workspace,body) .asset-library-tabs { display: flex; gap: 20px; margin-bottom: -1px; }
+:is(.workspace,body) .asset-library-tabs button {
+  min-height: 34px; padding: 0; border: 0; border-bottom: 1px solid transparent; border-radius: 0;
+  background: transparent; color: var(--ff-text-3); font-size: 13px; font-weight: 500;
+}
+:is(.workspace,body) .asset-library-tabs button:hover { color: var(--ff-text); background: transparent; }
+:is(.workspace,body) .asset-library-tabs button.active { color: var(--ff-text); background: transparent; border-bottom-color: var(--ff-white); }
+/* rows separated by hairlines */
+:is(.workspace,body) .asset-library-list { gap: 0; padding: 4px 20px 24px; }
+:is(.workspace,body) .asset-library-card {
+  grid-template-columns: 48px minmax(0, 1fr) auto; gap: 12px;
+  padding: 12px 0; border: 0; border-bottom: 1px solid var(--ff-border-soft); border-radius: 0;
+  background: transparent;
+}
+:is(.workspace,body) .asset-library-card:hover,
+:is(.workspace,body) .asset-library-card:focus-visible { background: var(--ff-raised); box-shadow: -20px 0 0 var(--ff-raised), 20px 0 0 var(--ff-raised); }
+:is(.workspace,body) .asset-library-thumb { width: 48px; height: 48px; border-radius: 4px; background: var(--ff-bg); color: var(--ff-text-3); }
+:is(.workspace,body) .asset-library-card-text { gap: 4px; }
+:is(.workspace,body) .asset-library-card-text b { font-size: 13px; font-weight: 500; color: var(--ff-text); }
+:is(.workspace,body) .asset-library-card-text small { font-family: var(--ff-mono); font-size: 12px; color: var(--ff-text-3); }
+:is(.workspace,body) .asset-library-badge { color: var(--ff-text-3); background: transparent; border: 0; padding: 0; font-size: 12px; }
+:is(.workspace,body) .asset-library-badge.adopted { color: var(--ff-ok); }
+:is(.workspace,body) .asset-id-copy { min-height: 26px; padding: 0 8px; color: var(--ff-text-2); font-size: 12px; }
+:is(.workspace,body) .asset-library-play { border: 1px solid var(--ff-border-strong); background: transparent; color: var(--ff-text); }
+:is(.workspace,body) .asset-library-play:hover { border-color: var(--ff-text-3); }
+:is(.workspace,body) .asset-library-detail { gap: 16px; padding: 18px 20px 24px; }
+:is(.workspace,body) .asset-library-detail h3 { font-size: 14px; font-weight: 600; }
+:is(.workspace,body) .asset-library-preview { border-radius: 4px; background: var(--ff-bg); }
+:is(.workspace,body) .asset-rename span { color: var(--ff-text-3); font-size: 12px; }
+:is(.workspace,body) .asset-rename input { background: var(--ff-bg); border: 1px solid var(--ff-border); }
+
+/* ---------- 角色库 / 角色编辑 ---------- */
+:is(.workspace,body) :is(.role-list, .role-detail, .asset-picker-body) { gap: 18px; padding: 20px 24px 28px; font-size: 13px; }
+:is(.workspace,body) :is(.role-back, .role-delete) { padding: 0; font-size: 12px; color: var(--ff-text-3); }
+:is(.workspace,body) .role-back:hover { color: var(--ff-text); }
+:is(.workspace,body) .role-delete { color: var(--ff-bad); }
+:is(.workspace,body) .role-detail label { gap: 8px; color: var(--ff-text-3); font-size: 12px; font-weight: 500; }
+:is(.workspace,body) :is(.role-create input, .role-detail input, .role-detail textarea) {
+  background: var(--ff-bg); border: 1px solid var(--ff-border); border-radius: 6px; color: var(--ff-text); font-size: 13px;
+}
+:is(.workspace,body) :is(.role-create input, .role-detail input, .role-detail textarea):focus { border-color: var(--ff-text-3); box-shadow: none; }
+:is(.workspace,body) .role-section-title { padding-top: 18px; border-top: 1px solid var(--ff-border-soft); color: var(--ff-text); font-size: 14px; font-weight: 600; }
+:is(.workspace,body) .role-section-title button { min-height: 28px; padding: 0 10px; font-size: 12px; }
+:is(.workspace,body) .role-asset-row { gap: 12px; padding: 10px 0; border: 0; border-bottom: 1px solid var(--ff-border-soft); border-radius: 0; background: transparent; }
+:is(.workspace,body) .role-asset-thumb { border-radius: 4px; background: var(--ff-bg); color: var(--ff-text-3); }
+:is(.workspace,body) .role-asset-row small { color: var(--ff-text-3); font-size: 12px; }
+:is(.workspace,body) .role-card { gap: 8px; padding: 8px; border: 1px solid var(--ff-border-soft); border-radius: 8px; background: transparent; }
+:is(.workspace,body) .role-card:hover { border-color: var(--ff-border-strong); background: var(--ff-raised); }
+:is(.workspace,body) .role-card-thumb { border-radius: 4px; background: var(--ff-bg); color: var(--ff-text-3); }
+:is(.workspace,body) .role-card b { font-size: 13px; font-weight: 500; }
+:is(.workspace,body) .role-card small { font-family: var(--ff-mono); font-size: 12px; color: var(--ff-text-3); }
+:is(.workspace,body) .role-card-copy { border: 1px solid var(--ff-border-strong); background: var(--ff-surface); color: var(--ff-text-2); }
+:is(.workspace,body) .role-empty { border: 1px dashed var(--ff-border-strong); color: var(--ff-text-3); }
+:is(.workspace,body) .asset-picker-check { background: var(--ff-white); color: var(--ff-ink); font-size: 12px; }
+
+/* ---------- long ids: small, monospace, quiet; the copy button stays ---------- */
+:is(.workspace,body) .id-copy-row { gap: 10px; padding: 0; border: 0; border-radius: 0; background: transparent; }
+:is(.workspace,body) .id-copy-row span { color: var(--ff-text-3); font-size: 12px; }
+:is(.workspace,body) :is(.id-copy-row code, .muted-id, .image-asset-id code, .id-catalog code) {
+  font-family: var(--ff-mono); font-size: 12px; color: var(--ff-text-3); letter-spacing: 0;
+}
+:is(.workspace,body) .id-copy-row button { min-height: 26px; padding: 0 10px; color: var(--ff-text-2); font-size: 12px; }
+
+/* ---------- dialogs (生成信息 etc.) ---------- */
+:is(.workspace,body) .generation-info-panel dl { gap: 14px 16px; padding: 20px 24px 24px; }
+:is(.workspace,body) .generation-info-panel dt { color: var(--ff-text-3); font-size: 12px; }
+
+/* ---------- canvas nodes: flat shell, no coloured accent line ---------- */
+:is(.workspace,body) .node-shell { background: var(--ff-raised); }
+:is(.workspace,body) .node-shell::before { display: none; }
+:is(.workspace,body) .node-shell[data-detail="far"] .node-header { background: var(--ff-raised); }
+:is(.workspace,body) .node-icon { border-color: var(--ff-border-strong); background: transparent; color: var(--ff-text-2); box-shadow: none; }
+:is(.workspace,body) .node-eyebrow { color: var(--ff-text-3); }
+:is(.workspace,body) .progress-track i { background: var(--ff-white); }

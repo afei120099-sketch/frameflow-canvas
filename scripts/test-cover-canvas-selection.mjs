@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {canvasCoverImage,addCanvasCoverPhoto} from '../lib/cover-canvas-selection.ts';
+assert.equal(canvasCoverImage({id:'v',type:'video-node',props:{src:'media:video'}}),null);
+assert.equal(canvasCoverImage({id:'x',type:'image-node',props:{src:''}}),null);
+assert.equal(canvasCoverImage(undefined),null);
+const shape={id:'img',type:'image-node',props:{src:'image:existing',assetId:'asset1',name:'男主.png',naturalWidth:512,naturalHeight:768}};
+const original=structuredClone(shape);const image=canvasCoverImage(shape);assert.equal(image.assetId,'asset1');assert.equal(image.width,512);assert.deepEqual(shape,original);
+const first=addCanvasCoverPhoto([],image.assetId);assert.equal(first[0].role,'男主');assert.equal(first[0].primary,true);
+const second=addCanvasCoverPhoto(first,'asset2');assert.equal(second[1].role,'女主');assert.equal(second[1].primary,true);assert.equal(first.length,1);
+assert.throws(()=>addCanvasCoverPhoto(second,'asset1'),/已经添加/);
+const nine=Array.from({length:9},(_,i)=>({role:'角色'+i,assetId:'a'+i,primary:true}));assert.throws(()=>addCanvasCoverPhoto(nine,'extra'),/9/);
+console.log('Canvas cover selection: image-only, existing asset reuse, immutable source, default roles, duplicate and 9-photo guards PASS. No GPU calls.');

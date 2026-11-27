@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+import { watchRun, findActiveRunForNode } from '../lib/run-recovery.ts';
+const run={runId:'run-A',ownerNodeId:'node-A',capabilityId:'seedvr2_upscale',comfyPromptId:'wrong-parent-id',submission:'accepted',status:'queued',parameters:{enhancementPipeline:true}};
+const step=(index,stage='upscale',state='reserved')=>({key:stage+'-'+index,promptId:stage+'-'+index,stage,state,segment:{index}});
+const checkpoint=(steps,extra={})=>({version:1,runId:'run-A',plan:{segments:[{},{}]},steps,...extra});
+const test=async(cp,probes,options={})=>{
+ let calls=[], phases=[],reads=0,sleeps=0;
+ const client={isAvailable:async()=>true,probeJob:async(id,node)=>{calls.push({id,node});return typeof probes==='function'?probes(id):probes.shift();}};
+ const outcome=await watchRun(run,client,{readEnhancement:async(id)=>{assert.equal(id,'run-A');reads++;return typeof cp==='function'?cp(reads):cp;},sleep:async()=>{assert.ok(++sleeps<15,'poll loop must terminate');},onPhase:(phase,stage)=>phases.push({phase,stage}),...options});
+ return {outcome,calls,phases};
+};
+// Query only this checkpoint's segment, not a parent Run ID or another node's ID.
+const queued=await test(checkpoint([step(0)]),[{state:'queued'},{state:'not_found'},{state:'not_found'}]);
+assert.equal(queued.phases[0].phase,'queued');
+assert.match(queued.phases[0].stage,/第1\/2段/);
+assert.ok(queued.calls.every(c=>c.id==='upscale-0'&&c.node==='76'));
+assert.equal(queued.outcome.phase,'unconfirmed');
+const controller=new AbortController();
+const running=await test(checkpoint([step(1,'interpolate')]),[{state:'running'}],{signal:controller.signal,onPhase:(phase)=>{assert.equal(phase,'running');controller.abort();}});
+assert.equal(running.outcome.phase,'detached');
+assert.equal(running.calls[0].node,'7');
+const completed=await test(checkpoint([step(0)]),[{state:'completed'},{state:'completed'},{state:'completed'}]);
+assert.equal(completed.outcome.phase,'paused','one finished segment is not the final video');
+const ready=await test(checkpoint([step(0,'upscale','completed'),step(1,'upscale','ready')]),[]);
+assert.equal(ready.outcome.phase,'paused');assert.equal(ready.calls.length,0);
+const merge=await test(checkpoint([step(0,'upscale','completed')]),[]);
+assert.match(merge.outcome.reason,/合并最终视频/);
+const final=await test(checkpoint([],{finalSource:'local:final',finalName:'final.mp4'}),[]);
+assert.deepEqual(final.outcome,{phase:'completed_local',source:'local:final',filename:'final.mp4'});
+const failed=await test(checkpoint([step(0)]),[{state:'failed',error:'CUDA out of memory'}]);
+assert.equal(failed.outcome.phase,'failed');assert.match(failed.outcome.error,/CUDA/);
+const wrong=await test({...checkpoint([step(0)]),runId:'run-B'},[]);
+assert.equal(wrong.outcome.phase,'unconfirmed');assert.equal(wrong.calls.length,0);
+const missing=await test(null,[]);assert.equal(missing.outcome.phase,'unconfirmed');
+// Another tab can advance the checkpoint while this observer follows it.
+const advanced=await test(read=>read===1?checkpoint([step(0)]):checkpoint([],{finalSource:'local:final',finalName:'final.mp4'}),[{state:'running'}]);
+assert.equal(advanced.outcome.phase,'completed_local');
+const ended=await test(checkpoint([step(0)]),[],{readRunState:async()=>({status:'cancelled',error:'用户取消'})});
+assert.equal(ended.outcome.phase,'settled');assert.equal(ended.outcome.status,'cancelled');assert.equal(ended.calls.length,0);
+assert.equal(findActiveRunForNode('node-B',[run]),null);
+assert.equal(findActiveRunForNode('node-A',[run]).runId,'run-A');
+let attempts=0;
+const offline=await watchRun(run,{isAvailable:async()=>++attempts>1,probeJob:async()=>({state:'failed',error:'test stop'})},{readEnhancement:async()=>checkpoint([step(0)]),sleep:async()=>{},onPhase:phase=>assert.equal(phase,'waiting_connection')});
+assert.equal(offline.phase,'failed');
+console.log('PASS read-only enhancement recovery: per-node segment IDs, queued/running, paused, final-local, missing/failed, cross-tab advance, terminal updates, offline, no submits');

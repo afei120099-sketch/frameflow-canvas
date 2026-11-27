@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import {readFileSync,existsSync} from 'node:fs';
+import path from 'node:path';
+import ts from 'typescript';
+
+const root=process.cwd();
+const config=ts.readConfigFile(path.join(root,'tsconfig.json'),ts.sys.readFile);
+assert.equal(config.error,undefined);
+const parsed=ts.parseJsonConfigFileContent(config.config,ts.sys,root);
+assert.deepEqual(parsed.errors,[]);
+const files=new Set(parsed.fileNames.map(file=>path.resolve(file)));
+const backup='runtime/queue-save-repair-20261020/canvas-library.before.ts';
+assert.ok(config.config.exclude.includes(backup),'the exact historical backup is excluded');
+if(existsSync(path.join(root,backup)))assert.ok(readFileSync(path.join(root,backup),'utf8').includes('confirmCanvasRecords'),'original backup remains readable and intact');
+assert.ok(!files.has(path.join(root,backup)),'only this archival source is excluded');
+for(const file of ['lib/canvas-image-clipboard.ts','components/canvas/image-clipboard.ts','lib/canvas-library.ts','lib/shot-queue.ts','components/use-shot-queue-execution.ts'])assert.ok(files.has(path.join(root,file)),file+' remains typechecked');
+assert.equal(config.config.compilerOptions.strict,true);
+assert.equal(config.config.compilerOptions.noEmit,true);
+assert.ok(!config.config.exclude.some(rule=>rule==='runtime'||rule==='runtime/**'||rule==='runtime/**/*'),'no blanket exclusion of runtime');
+const clipboard=readFileSync(path.join(root,'lib/canvas-image-clipboard.ts'),'utf8');
+assert.match(clipboard,/export function pngWithCanvasContent\(png: Uint8Array, content: unknown\): Uint8Array<ArrayBuffer>/);
+const wide=clipboard.replace('content: unknown): Uint8Array<ArrayBuffer>','content: unknown): Uint8Array');
+const compile=source=>ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText;
+assert.equal(compile(clipboard),compile(wide),'return-type narrowing does not change emitted JavaScript');
+console.log('PASS TypeScript scope: archival backup preserved/excluded, live clipboard/canvas/queue sources still checked, strict/noEmit retained.');

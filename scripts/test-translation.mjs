@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import {translationChunks,translateText} from '../lib/translation.ts';
+const original='中文😀'.repeat(200);
+assert.equal(translationChunks(original).join(''),original);
+assert.ok(translationChunks(original).every(x=>new TextEncoder().encode(x).length<=450));
+await assert.rejects(()=>translateText('','zh-en'));
+await assert.rejects(()=>translateText('x','invalid'));
+await assert.rejects(()=>translateText('a'.repeat(5001),'zh-en'));
+await assert.rejects(()=>translateText('hello','en-zh',{fetch:async()=>new Response(JSON.stringify({responseStatus:200,quotaFinished:true,responseData:{translatedText:'bad'}}))}));
+assert.equal(await translateText('hello','en-zh',{fetch:async()=>new Response(JSON.stringify({responseStatus:200,responseData:{translatedText:'你好'}}))}),'你好');
+const aborted=new AbortController();aborted.abort();
+await assert.rejects(()=>translateText('hello','en-zh',{signal:aborted.signal,fetch:async(_,options)=>{options.signal.throwIfAborted();throw Error('unreachable');}}));
+console.log('Translation validation, Unicode chunking, quota refusal, cancellation and response handling passed; no network calls.');

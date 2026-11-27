@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import {harness} from './test-inbox-scheduler.mjs';
+const session={id:'original-session',pageId:'page:target',version:1,autoContinueFrames:true,queue:{version:'shot-queue-v1',title:'manual original',chapters:[{title:'one',shots:[{title:'target'}]}]},entries:[{chapter:0,shot:0,nodeId:'node:original',submissionState:'pending',rerun:{requestId:'original-rerun'}}]};
+const command={action:'recover_tail_output',commandId:'one-recovery',sessionId:session.id,pageId:session.pageId,nodeId:'node:original',requestId:'original-rerun',edge:'first',output:{originalAssetId:'original-image',promptId:'existing-hd',filename:'Frameflow_Frame_HD_00112_.png',expectedOriginalSha256:'a'.repeat(64),expectedOutputSha256:'b'.repeat(64)}};
+let repairs=0;
+const h=await harness({sessions:[session],paused:true,command,controller:{recoverTail:async target=>{assert.equal(target.output.promptId,'existing-hd');repairs++;return{state:'recovered_not_submitted',assetId:'recognized-existing-hd'};}},rootControl:{stop:false,error:null,effective:{autoEnqueue:false,autoChain:false,submit:false}}});
+assert.equal(h.disk.get('_inbox_command_status.json').state,'recovered_not_submitted');assert.equal(repairs,1);assert.equal(h.data.handoffs,0);await h.tick();assert.equal(repairs,1,'same command is not applied twice');h.cleanup();
+const wrong=await harness({sessions:[session],paused:true,command:{...command,requestId:'wrong'},controller:{recoverTail:async()=>{throw Error('must not run');}}});assert.equal(wrong.disk.get('_inbox_command_status.json').state,'blocked');wrong.cleanup();
+console.log('PASS file-only tail recovery: original request/page/session/node scope, no queue receipt invented, idempotent acknowledgement, repair allowed with GPU submission disabled, mismatch rejected.');
+const isolated=await harness({sessions:[session],paused:true,corruptProject:true,command,controller:{recoverTail:async()=>({state:'recovered_not_submitted',assetId:'retained'})}});
+assert.equal(isolated.disk.get('_inbox_command_status.json').state,'recovered_not_submitted','corrupt neighbor cannot starve scoped recovery');assert.equal(isolated.data.handoffs,0);isolated.cleanup();
+const heldImport=await harness({corruptProject:true});assert.equal(heldImport.data.handoffs,0,'unknown damaged receipts must fence fresh imports');assert.match(heldImport.disk.get('new_queue_status.json').note,/损坏/);heldImport.cleanup();

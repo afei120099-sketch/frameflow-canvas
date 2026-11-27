@@ -1,0 +1,192 @@
+{
+  "source": "runtime/director-trials/2026-09-27T01-55-15 (brief B, real local director, compiled by autopilot-m2-t2va-compiler-v2 before the hard-constraint round)",
+  "intent": "做一条30秒手机实拍感视频，一架现代垂直起降战斗机从公路板车上起飞，最后冲向远处天空。",
+  "plan": {
+    "title": "Vertical Take‑Off",
+    "logline": "A modern VTOL fighter lifts from a road cart and soars into the sky in a dynamic smartphone‑style shoot.",
+    "style": "Live-action, handheld smartphone footage",
+    "characters": [
+      {
+        "id": "pilot",
+        "name": "Pilot",
+        "description": "Male in flight suit"
+      },
+      {
+        "id": "plane",
+        "name": "VTOL Fighter",
+        "description": "Modern vertical take‑off aircraft"
+      }
+    ],
+    "shots": [
+      {
+        "index": 1,
+        "title": "Plane on Road Cart",
+        "purpose": "Show the fighter positioned on a road cart, establishing context.",
+        "plannedDurationSeconds": 8,
+        "openingState": "The camera is framed at medium height, showing a sleek VTOL fighter resting on a sturdy road cart parked beside an open highway. The sun glints off its metal surface.",
+        "event": "The pilot steps onto the cart, checks instruments, and gives a brief nod to himself.",
+        "endingState": "The plane remains stationary as the pilot stands beside it, ready for launch.",
+        "characters": [
+          "pilot",
+          "plane"
+        ],
+        "camera": {
+          "shotSize": "medium shot",
+          "motion": "static",
+          "amplitude": "small",
+          "speed": "slow",
+          "target": null
+        },
+        "allowedCameraMotion": [],
+        "forbiddenCameraMotion": [],
+        "invariants": [],
+        "dialogue": [
+          {
+            "speaker": "pilot",
+            "text": "准备好了。",
+            "language": "Chinese",
+            "delivery": "normal",
+            "onScreenSpeaking": true,
+            "voiceover": false
+          }
+        ],
+        "ambientSound": "Quiet traffic hum, distant wind",
+        "physicalSounds": [
+          "footsteps on metal"
+        ],
+        "nonVerbalSounds": [],
+        "nonDiegeticMusicIntent": "Light ambient electronic tone",
+        "visualConstraints": [],
+        "forbiddenContent": [],
+        "productClaims": []
+      },
+      {
+        "index": 2,
+        "title": "Engine Start",
+        "purpose": "Capture the moment engines ignite and the aircraft begins to lift.",
+        "plannedDurationSeconds": 8,
+        "openingState": "The pilot is in the cockpit, hands on controls. The camera remains at medium shot, focused on the cockpit view through the windshield.",
+        "event": "The pilot pulls the throttle forward; engine turbines roar to life, emitting a low hum and a plume of blue-white exhaust.",
+        "endingState": "The aircraft's nose tilts upward slightly as it begins to rise off the cart.",
+        "characters": [
+          "pilot",
+          "plane"
+        ],
+        "camera": {
+          "shotSize": "medium shot",
+          "motion": "static",
+          "amplitude": "small",
+          "speed": "slow",
+          "target": null
+        },
+        "allowedCameraMotion": [],
+        "forbiddenCameraMotion": [],
+        "invariants": [],
+        "dialogue": [
+          {
+            "speaker": "pilot",
+            "text": "起飞！",
+            "language": "Chinese",
+            "delivery": "normal",
+            "onScreenSpeaking": true,
+            "voiceover": false
+          }
+        ],
+        "ambientSound": "Low engine hum, wind rushing",
+        "physicalSounds": [
+          "engine roar",
+          "exhaust plume"
+        ],
+        "nonVerbalSounds": [],
+        "nonDiegeticMusicIntent": "Build‑up rhythmic percussion",
+        "visualConstraints": [],
+        "forbiddenContent": [],
+        "productClaims": []
+      },
+      {
+        "index": 3,
+        "title": "Lift Off",
+        "purpose": "Show the aircraft leaving the ground and ascending.",
+        "plannedDurationSeconds": 8,
+        "openingState": "The camera follows the plane as it lifts, maintaining a medium shot that captures both the aircraft and the road below.",
+        "event": "The VTOL fighter rises steadily, wheels retracting; the pilot's visor reflects the passing scenery.",
+        "endingState": "The aircraft is clear of the cart, hovering slightly before gaining altitude.",
+        "characters": [
+          "pilot",
+          "plane"
+        ],
+        "camera": {
+          "shotSize": "medium shot",
+          "motion": "tracking",
+          "amplitude": "small",
+          "speed": "normal",
+          "target": "plane"
+        },
+        "allowedCameraMotion": [],
+        "forbiddenCameraMotion": [],
+        "invariants": [],
+        "dialogue": [
+          {
+            "speaker": "pilot",
+            "text": "升空！",
+            "language": "Chinese",
+            "delivery": "normal",
+            "onScreenSpeaking": true,
+            "voiceover": false
+          }
+        ],
+        "ambientSound": "Wind rush, engine thrum",
+        "physicalSounds": [
+          "wheel retracting"
+        ],
+        "nonVerbalSounds": [],
+        "nonDiegeticMusicIntent": "Accelerating synth lead",
+        "visualConstraints": [],
+        "forbiddenContent": [],
+        "productClaims": []
+      },
+      {
+        "index": 4,
+        "title": "Soaring into Sky",
+        "purpose": "Conclude with the aircraft ascending into the horizon.",
+        "plannedDurationSeconds": 8,
+        "openingState": "The camera pulls back to a wide view, showing the plane gaining altitude against a clear blue sky.",
+        "event": "The VTOL fighter climbs higher, its silhouette growing smaller as it disappears into the distance.",
+        "endingState": "Only the faint outline of the aircraft remains against the sky, fading out of frame.",
+        "characters": [
+          "plane"
+        ],
+        "camera": {
+          "shotSize": "wide shot",
+          "motion": "pull_out",
+          "amplitude": "medium",
+          "speed": "slow",
+          "target": null
+        },
+        "allowedCameraMotion": [],
+        "forbiddenCameraMotion": [],
+        "invariants": [],
+        "dialogue": [],
+        "ambientSound": "Soft wind, distant engine echo",
+        "physicalSounds": [],
+        "nonVerbalSounds": [],
+        "nonDiegeticMusicIntent": "Triumphant orchestral swell",
+        "visualConstraints": [],
+        "forbiddenContent": [],
+        "productClaims": []
+      }
+    ]
+  },
+  "officialPrompts": [
+    "integrated_multimodal_description: [Shot 1] Live-action, handheld smartphone footage, vertical framing, a medium shot frames the scene. The camera is framed at medium height, showing a sleek VTOL fighter resting on a sturdy road cart parked beside an open highway. The sun glints off its metal surface. The camera holds a static shot. The pilot steps onto the cart, checks instruments, and gives a brief nod to himself. Male in flight suit (S1), normal, says: <d>[Chinese] 准备好了。</d> The plane remains stationary as the pilot stands beside it, ready for launch.\n\noverall_soundscape: Quiet traffic hum, distant wind. Footsteps on metal can be heard.\n\nnon_diegetic_music: Light ambient electronic tone.",
+    "integrated_multimodal_description: [Shot 1] Live-action, handheld smartphone footage, vertical framing, a medium shot frames the scene. The pilot is in the cockpit, hands on controls. The camera remains at medium shot, focused on the cockpit view through the windshield. The camera holds a static shot. The pilot pulls the throttle forward; engine turbines roar to life, emitting a low hum and a plume of blue-white exhaust. Male in flight suit (S1), normal, says: <d>[Chinese] 起飞！</d> The aircraft's nose tilts upward slightly as it begins to rise off the cart.\n\noverall_soundscape: Low engine hum, wind rushing. Engine roar and exhaust plume can be heard.\n\nnon_diegetic_music: Build‑up rhythmic percussion.",
+    "integrated_multimodal_description: [Shot 1] Live-action, handheld smartphone footage, vertical framing, a medium shot frames the scene. The camera follows the plane as it lifts, maintaining a medium shot that captures both the aircraft and the road below. The camera tracks plane with small amplitude. The VTOL fighter rises steadily, wheels retracting; the pilot's visor reflects the passing scenery. Male in flight suit (S1), normal, says: <d>[Chinese] 升空！</d> The aircraft is clear of the cart, hovering slightly before gaining altitude.\n\noverall_soundscape: Wind rush, engine thrum. Wheel retracting can be heard.\n\nnon_diegetic_music: Accelerating synth lead.",
+    "integrated_multimodal_description: [Shot 1] Live-action, handheld smartphone footage, vertical framing, a wide shot frames the scene. The camera pulls back to a wide view, showing the plane gaining altitude against a clear blue sky. The camera pulls out at slow speed. The VTOL fighter climbs higher, its silhouette growing smaller as it disappears into the distance. Only the faint outline of the aircraft remains against the sky, fading out of frame.\n\noverall_soundscape: Soft wind, distant engine echo.\n\nnon_diegetic_music: Triumphant orchestral swell."
+  ],
+  "lengths": [
+    192,
+    192,
+    192,
+    192
+  ]
+}

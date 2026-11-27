@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { queueCatalogScope, buildQueueCatalog } from '../lib/shot-queue-catalog.ts';
+
+const image = (assetId, storageReference = `image:${assetId}`) => ({ assetId, kind: 'image', filename: `${assetId}.png`, storageReference });
+const role = (roleId, appearanceAssetIds, primaryAppearanceAssetId = appearanceAssetIds[0]) => ({ roleId, displayName: roleId, appearanceAssetIds, primaryAppearanceAssetId });
+const images = ['scene-a', 'scene-b', 'face-a', 'face-b', 'unused', 'guide'].map(id => image(id));
+const roles = [role('role-a', ['face-a']), role('role-b', ['face-b'])];
+const shape = (type, props) => ({ type, props });
+const pageA = [shape('image-node', { assetId: 'scene-a', src: 'image:scene-a' }), shape('h3-node', { roleIds: ['role-a'], referenceImages: [{ src: 'image:scene-a' }] })];
+const a = buildQueueCatalog(queueCatalogScope(pageA), roles, images);
+assert.deepEqual(a.roles.map(r => r.id), ['role-a']);
+assert.deepEqual(a.images.map(i => i.id), ['scene-a', 'face-a']);
+const pageB = [shape('image-node', { src: 'image:face-b' }), shape('flux-image-node', { src: 'image:scene-b', assetId: 'scene-b' })];
+const b = buildQueueCatalog(queueCatalogScope(pageB), roles, images);
+assert.deepEqual(b.roles.map(r => r.id), ['role-b']);
+assert.deepEqual(b.images.map(i => i.id), ['scene-b', 'face-b']);
+assert.deepEqual(buildQueueCatalog(queueCatalogScope([]), roles, images), { roles: [], images: [] });
+const embedded = buildQueueCatalog(queueCatalogScope([shape('h3-node', { storyboardGuides: [{ assetId: 'guide' }], referenceImages: [{ src: 'image:scene-a' }] })]), roles, images);
+assert.deepEqual(embedded.images.map(i => i.id), ['scene-a', 'guide']);
+assert.deepEqual(embedded.roles, []);
+// Non-adopted image history and unrelated pages must never expand this catalog.
+const flux = buildQueueCatalog(queueCatalogScope([shape('flux-image-node', { src: 'image:scene-a', candidates: [{ assetId: 'unused', src: 'image:unused' }, { assetId: 'scene-b', src: 'image:scene-b' }], adoptedAssetId: 'scene-b' })]), roles, images);
+assert.deepEqual(flux.images.map(i => i.id), ['scene-a', 'scene-b']);
+const source = readFileSync(new URL('../components/shot-queue-panel.tsx', import.meta.url), 'utf8');
+assert.doesNotMatch(source, /<details[^>]*className="id-catalog"[^>]*\sopen[\s>]/);
+assert.match(source, /getCurrentPageShapes\(\)/);
+assert.match(source, /getCurrentPageId\(\)/);
+assert.match(source, /loadedCatalog\.scopeKey === scopeKey/);
+assert.match(source, /return \(\) => \{ active = false; \}/);
+console.log('Queue catalog: collapsed default, page isolation, bound roles, embedded references and stale-page guard PASS');

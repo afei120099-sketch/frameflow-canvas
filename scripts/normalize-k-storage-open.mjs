@@ -1,0 +1,4 @@
+import assert from'node:assert/strict';import ts from'typescript';
+function fn(source,name){const ast=ts.createSourceFile('db.ts',source,ts.ScriptTarget.Latest,true),node=ast.statements.find(n=>ts.isFunctionDeclaration(n)&&n.name?.text===name);assert.ok(node);return{start:node.getStart(ast),end:node.end,text:node.getText(ast)};}
+export function normalizeStorageOpen(source,baseline,names=['openDatabase']){for(const name of names){const current=fn(source,name),old=fn(baseline,name);source=source.slice(0,current.start)+old.text+source.slice(current.end);}return source.replace('import { openLocalDatabase } from "./local-database-open.ts";\n','');}
+export function normalizeRecoverySaveNode(source){return source.replace('import { COMMUNITY_SAVE_NODE_ID } from "./comfyui/experimental/h3-community.ts";\n','').replace('? COMMUNITY_SAVE_NODE_ID : saveNodeForCapability','? "148" : saveNodeForCapability');}

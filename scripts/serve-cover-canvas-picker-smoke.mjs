@@ -1,0 +1,4 @@
+import {registerHooks} from 'node:module';
+registerHooks({resolve(s,c,next){try{return next(s,c);}catch(e){if(s.startsWith('.')&&!/\.[a-z]+$/i.test(s))return next(s+'.ts',c);throw e;}}});
+const {createServer}=await import('vite');const {default:react}=await import('@vitejs/plugin-react');
+const server=await createServer({configFile:false,root:process.cwd(),plugins:[react(),{name:'cover-pick-smoke',configureServer(s){s.middlewares.use('/picker-smoke',async(req,res)=>{res.setHeader('Content-Type','text/html');res.end(await s.transformIndexHtml('/picker-smoke','<html><body><div id="root"></div><script type="module" src="/scripts/cover-canvas-picker-smoke.jsx"></script></body></html>'));});}}],resolve:{alias:{'@':process.cwd()}},server:{host:'127.0.0.1',port:5174,strictPort:true},cacheDir:'runtime/cover-picker-test-cache'});await server.listen();console.log('Isolated canvas picker smoke on 5174/picker-smoke; NO Comfy proxy.');

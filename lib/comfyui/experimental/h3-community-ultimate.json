@@ -1,0 +1,385 @@
+{
+  "115": {
+    "inputs": {
+      "aspect_ratio": "16:9 (Widescreen)",
+      "megapixels": 1,
+      "multiple": 32
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector (Size)"
+    }
+  },
+  "119": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "120": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "121": {
+    "inputs": {
+      "samples": [
+        "125",
+        0
+      ],
+      "vae": [
+        "120",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE解码（音频）"
+    }
+  },
+  "122": {
+    "inputs": {
+      "samples": [
+        "125",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "123": {
+    "inputs": {
+      "sampler_name": "er_sde"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "K采样器选择"
+    }
+  },
+  "125": {
+    "inputs": {
+      "noise": [
+        "129",
+        0
+      ],
+      "guider": [
+        "126",
+        0
+      ],
+      "sampler": [
+        "123",
+        0
+      ],
+      "sigmas": [
+        "147",
+        0
+      ],
+      "latent_image": [
+        "136",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "自定义采样器（高级）"
+    }
+  },
+  "126": {
+    "inputs": {
+      "model": [
+        "150",
+        0
+      ],
+      "conditioning": [
+        "136",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "基本引导器"
+    }
+  },
+  "127": {
+    "inputs": {
+      "unet_name": "minimax_h3_hybrid_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "128": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  },
+  "129": {
+    "inputs": {
+      "noise_seed": 201269762798606
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "随机噪波"
+    }
+  },
+  "131": {
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "132",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "数学表达式"
+    }
+  },
+  "132": {
+    "inputs": {
+      "value": 12
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (Duration)"
+    }
+  },
+  "136": {
+    "inputs": {
+      "prompt": [
+        "138",
+        0
+      ],
+      "width": [
+        "115",
+        0
+      ],
+      "height": [
+        "115",
+        1
+      ],
+      "length": [
+        "131",
+        1
+      ],
+      "ref_image_size": "match",
+      "clip": [
+        "128",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ],
+      "audio_vae": [
+        "120",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "137",
+        0
+      ],
+      "ref_images.ref_image_1": [
+        "139",
+        0
+      ],
+      "ref_images.ref_image_2": [
+        "167",
+        0
+      ],
+      "ref_images.ref_image_3": [
+        "173",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "_meta": {
+      "title": "MiniMax H3 参考转视频"
+    }
+  },
+  "137": {
+    "inputs": {
+      "image": "123e73ef06ed6e4179e57b5f8ad90222.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "138": {
+    "inputs": {
+      "value": "subject_definitions:\n<Subject 1> is the red panda warrior monk Zhang Junjie from the character sheet in <Picture 1>, with reddish-brown hair braided into a high bun, amber eyes, white-and-dark-brown facial fur, round gold-and-jade bead earrings, a dark-green cross-collar robe with gold trim over a cream inner layer, dark-bronze shoulder and forearm armor with gold edging, a jade-disc belt buckle with red tassels, wide dark-navy trousers with cloud patterns, cream leg wrappings with green straps, and a dark-green gold-fitted scabbard holding a long sword with a jade pommel and red tassel; his energy is swirling jade-green mist.\n<Subject 2> is the stout panda warrior monk on the far left of <Picture 2>, with a long braided beard, an ochre-yellow robe over brown armor and leather pauldrons, a red sash, two gourds hanging at his hip, a straw hat on his back, and a long wooden staff.\n<Subject 3> is the slim panda boxer second from the left in <Picture 2>, with a topknot, a navy-blue embroidered cross-collar tunic with frog buttons, a cream sash, dark trousers, and metal-studded bracers.\n<Subject 4> is the female red panda fighter third from the left in <Picture 2>, with a long auburn braid, a maroon vest over a cream shirt, a red sash, dark trousers with red-banded leg wraps, and studded bracers, fighting with a short blade.\n<Subject 5> is the elderly grey-furred panda grandmaster on the far right of <Picture 2>, with a white beard, long white eyebrows, a topknot, a grey-blue vest over a grey shirt, a cream sash, and studded bracers, fighting with a horsetail whisk.\n<Subject 6> is the mantis-like alien monster in <Picture 3>, with yellow-green chitin armor patched with turquoise-blue rust and rows of bone spikes, bulging orange-red compound eyes with slit pupils, long segmented antennae, huge spiked sickle forelimbs, clawed bird-like feet, and a ragged purple loincloth with a silver crescent emblem; it appears as a swarm of many identical individuals.\n<Subject 7> is the divine crane Zhuhe Chijing in <Picture 4>, with a white body and long neck, a long red beak, a flame-like vermilion crest, crimson-to-orange flame-edged flight and tail feathers, red crest emblems on its wings, and long orange legs, its whole body wrapped in a glowing red-gold aura; it fights only on the ground at close range and never flies or breathes fire.\n\nsummary:\n[reference generation] Continuing the fight in the bamboo forest, <Subject 1> breaks a three-way ambush of <Subject 6> with a 540-degree spinning kick, then cuts deeper into the swarm with Wing Chun trapping and sword-style footwork while <Subject 2>, <Subject 3>, <Subject 4>, and <Subject 5> struggle behind him. Green mist from his hits heals <Subject 3>, who strikes back. At the thickest point of the swarm, <Subject 1> summons <Subject 7>, which lands beside him as the second wave of monsters closes in.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the red panda's earrings, braided bun, dark-green gold-trimmed robe with bronze armor, navy trousers, and sheathed red-tasseled sword are retained; the sword stays sheathed.\n<Subject 2> (appears in [Shot 2]): fully_preserved - the braided beard, ochre robe with brown armor, red sash, gourds, and staff are retained.\n<Subject 3> (appears in [Shot 2]): fully_preserved - the topknot, navy embroidered tunic, cream sash, and bracers are retained.\n<Subject 4> (appears in [Shot 2]): fully_preserved - the long auburn braid, maroon vest, red sash, and short blade are retained.\n<Subject 5> (appears in [Shot 2]): fully_preserved - the grey fur, white beard, grey-blue vest, and horsetail whisk are retained.\n<Subject 6> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the yellow-green chitin with turquoise rust, orange-red compound eyes, antennae, spiked sickle forelimbs, and purple loincloth are retained across the whole swarm.\n<Subject 7> (appears in [Shot 3]): fully_preserved - the crane's white body, red beak, flame-like vermilion crest and feathers, and red-gold aura are retained; it stays on the ground.\n\ndetailed_description:\nThe target video is in a realistic live-action martial-arts style with a Chinese ink-wash texture, shot handheld on 35mm with fast push-ins and pull-outs, abrupt stops with slight rebound, and subtle lens breathing. The battlefield is a deep-mountain bamboo forest of towering ink-black bamboo with a winding bluestone path, moss-covered stones, reflective puddles, cracked ground, low-hanging mist, and floating bamboo-leaf fragments and ink particles. Every movement obeys real physics with clear force feedback and cause and effect; the green energy only accents the techniques and never hides them.\n[Shot 1] A medium shot from a 15-degree low angle trucks laterally, following the arc of <Subject 1>'s spinning leg in the bamboo forest. Three <Subject 6> slide in at high speed from three directions and chop down with crossed sickle limbs. He side-steps, cuts the angle behind them, and uses the momentum of the turn to leap into a 540-degree horizontal spinning hook kick; his leg wind sweeps into a blade-shaped ring of green energy, and all three head plates shatter in the same frame, the monsters flying off in three directions. He lands with no wind-up and fires a low Wing Chun stop-kick that snaps one monster's supporting leg, then shifts with Taiyi sword-style footwork, cutting diagonally in a half-circle step into the thin edge of the swarm. A binding-hand wraps a sickle limb; he twists his body and drags the monster down, pins its bridge, and drives a darting finger strike through its red compound eye.\n[Shot 2] At 00:06.500, the camera cuts to a near shot at a 90-degree side angle, pushing in fast on <Subject 3>. A wisp of green mist sweeps over his bruised shoulder and bracer-wrapped arm, and the bruises fade before our eyes. He bares his teeth with a roar and throws a swinging hook that blasts the pinning monster backward. Behind him, <Subject 2>, <Subject 4>, and <Subject 5> grit their teeth and follow <Subject 1> deeper into the swarm, still pressed hard by monsters on both flanks, as <Subject 1> fights and cuts his way forward ahead of them.\n[Shot 3] At 00:10.000, the shot cuts to a medium close-up from a 45-degree side angle at eye level, the camera arcing around <Subject 1>'s upper body with small amplitude. At the densest point of the swarm, he plants his half-circle step and freezes. His right hand forms a hand seal and a crane's cry rings out. A burst of red-gold light strikes the ground, and <Subject 7> lands beside him with folded wings, head raised high, its talons gripping and cracking the bluestone, the flame-like red-gold feathers along its wing edges glowing. A wave of heat forces the front row of monsters to rear back together. Man and crane stand shoulder to shoulder as the second wave of <Subject 6> surges down from above and all sides.\n\noverall_soundscape:\nBamboo leaves whip in the wind of the kick, followed by the simultaneous crack of three shattering head plates, sharp bone-snapping impacts, and sandals scraping across wet stone. The boxer roars, monsters hiss and clatter their sickle limbs, and the summoning ends with a piercing crane cry and a low roar of heat.\n\nnon_diegetic_music:\nFast Chinese war drums at a driving tempo with plucked guqin and low strings, cutting to a sustained brass swell as the crane lands.\n"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Input Text (Prompt)"
+    }
+  },
+  "139": {
+    "inputs": {
+      "image": "4634fa7e32733958b888b5491181d36d.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "145": {
+    "inputs": {
+      "lora_name": "minimax_h3_DMAD_4step_full_lora_avg_rank_39_bf16.safetensors",
+      "strength_model": 0.75,
+      "model": [
+        "127",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "147": {
+    "inputs": {
+      "sigmas": "1, .9882, .973, .9524, .9231, .878, .8, .6316, .4737, .1579, 0 "
+    },
+    "class_type": "ManualSigmas",
+    "_meta": {
+      "title": "自定义Sigmas"
+    }
+  },
+  "148": {
+    "inputs": {
+      "frame_rate": 24,
+      "loop_count": 0,
+      "filename_prefix": "AnimateDiff",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 19,
+      "save_metadata": true,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": true,
+      "images": [
+        "122",
+        0
+      ],
+      "audio": [
+        "121",
+        0
+      ]
+    },
+    "class_type": "VHS_VideoCombine",
+    "_meta": {
+      "title": "Video Combine 🎥🅥🅗🅢"
+    }
+  },
+  "150": {
+    "inputs": {
+      "max_resolution": 1024,
+      "jpeg_quality": 80,
+      "suppress_default_preview": true,
+      "preview_frames": [
+        "131",
+        1
+      ],
+      "preview_fps": 8,
+      "tiny_vae": "taeh3.safetensors",
+      "model": [
+        "165",
+        0
+      ]
+    },
+    "class_type": "ModelPreviewOverrideKJ",
+    "_meta": {
+      "title": "Model Preview Override"
+    }
+  },
+  "156": {
+    "inputs": {
+      "attention": "comfy kitchen attention",
+      "model": [
+        "145",
+        0
+      ]
+    },
+    "class_type": "ModelAttentionBackend",
+    "_meta": {
+      "title": "模型注意力后端"
+    }
+  },
+  "160": {
+    "inputs": {
+      "scheduler": "beta",
+      "steps": 30,
+      "denoise": 1,
+      "model": [
+        "150",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "基本调度器"
+    }
+  },
+  "165": {
+    "inputs": {
+      "selection": "sol-attn",
+      "selection.tau": 1.3,
+      "start_percent": 0.2,
+      "end_percent": 1,
+      "dense_blocks": "",
+      "min_tokens": 12288,
+      "extra_tokens": 256,
+      "sink_conditioning": "exact_kv_and_rows",
+      "verbose": true,
+      "model": [
+        "156",
+        0
+      ]
+    },
+    "class_type": "BlockSparseAttention",
+    "_meta": {
+      "title": "模型稀疏注意力"
+    }
+  },
+  "167": {
+    "inputs": {
+      "image": "10ebe3a9f457654d265e5bc092f9b87e.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "173": {
+    "inputs": {
+      "image": "e2cd3ff4af9927ae2ca51c600f7eea26.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  }
+}

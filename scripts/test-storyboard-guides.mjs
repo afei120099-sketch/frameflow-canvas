@@ -1,0 +1,32 @@
+import assert from "node:assert/strict";
+import { resolveStoryboardGuides, resolveOrderedStoryboardGuides, storyboardGuideProblem } from "../lib/storyboard-guides.ts";
+import { buildH3AddGuideWorkflow } from "../lib/comfyui/experimental/h3-addguide.ts";
+const guide = (anchorFrame, atEnd = false) => ({ assetId: String(anchorFrame), storageReference: "image:test", filename: "test.png", anchorFrame, atEnd });
+const input = [guide(100), guide(50), guide(70, true)];
+assert.deepEqual(resolveStoryboardGuides(input, 141).map(g => g.anchorFrame), [50, 100, 140]);
+assert.deepEqual(input.map(g => g.anchorFrame), [100, 50, 70]);
+assert.equal(resolveStoryboardGuides(input, 209).at(-1).anchorFrame, 208);
+assert.equal(storyboardGuideProblem(resolveStoryboardGuides(input, 141), 141, "i2va"), "");
+for (const mode of ["t2va", "fl2va", "ref2va", "hybrid"]) assert(storyboardGuideProblem(input, 141, mode));
+for (const guides of [[guide(0)], [guide(141)], [guide(50), guide(50)], Array.from({length: 5}, (_, i) => guide(i+1))]) assert(storyboardGuideProblem(guides, 141, "i2va"));
+assert(storyboardGuideProblem(resolveStoryboardGuides([guide(10,true),guide(20,true)],141),141,"i2va"));
+assert.equal(storyboardGuideProblem([], 141, "fl2va"), "", "ordinary modes unchanged without guides");
+const settings = { length: 141, aspect: "follow", megapixels: .5, turbo: true, steps: 6, fps: 24, loraStrength: 1, upscaleMethod: "lanczos", resolutionSteps: 32, soundMode: "av" };
+const frames = [35, 70, 105, 140];
+const workflow = buildH3AddGuideWorkflow("first.png", "连续动作", 7, settings, frames.map(frameIdx => ({ imageName: `guide-${frameIdx}.png`, frameIdx })));
+assert.deepEqual(Object.values(workflow).filter(n => n.class_type === "MiniMaxH3AddGuide").map(n => n.inputs.frame_idx), frames);
+assert.deepEqual(workflow["7"].inputs.conditioning, ["ff-guide-3", 0]);
+assert.equal(workflow["6"].inputs.last_frame, undefined, "ending Guide is not a hidden Hybrid/native tail");
+console.log("PASS: sorting, endpoint follows length, immutable input, mode/count/time/duplicate guards");
+for (let count = 1; count <= 4; count++) {
+  const original = Array.from({ length: count }, (_, slot) => ({ ...guide(slot + 1), slot }));
+  const ordered = resolveOrderedStoryboardGuides([...original].reverse(), 192);
+  assert.deepEqual(ordered.map(g => g.slot), original.map(g => g.slot));
+  assert.equal(ordered.at(-1).anchorFrame, 191);
+  assert.equal(ordered.filter(g => g.atEnd).length, 1);
+  assert.equal(storyboardGuideProblem(ordered, 192, "i2va"), "");
+  assert.equal(resolveOrderedStoryboardGuides(original, 141).at(-1).anchorFrame, 140);
+  assert.deepEqual(original.map(g => g.anchorFrame), original.map((_, i) => i + 1), "input not mutated");
+}
+assert.deepEqual(resolveOrderedStoryboardGuides([{ ...guide(1), slot: 3 }, { ...guide(2), slot: 0 }], 141).map(g => g.anchorFrame), [70, 140], "holes ignored");
+console.log("PASS: 1–4 subsequent pictures, automatic spacing/end, holes, ordering, length change; frozen AddGuide unchanged");

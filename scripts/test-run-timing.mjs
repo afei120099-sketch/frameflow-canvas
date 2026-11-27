@@ -1,0 +1,18 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {runTiming} from "../lib/run-timing.ts";
+const queued={createdAt:1000,startedAt:null,completedAt:null};
+assert.deepEqual(runTiming(queued,601000),{queueSeconds:600,generationSeconds:null});
+const running={...queued,startedAt:601000};
+assert.deepEqual(runTiming(running,661000),{queueSeconds:600,generationSeconds:60});
+assert.deepEqual(runTiming({...running},721000),{queueSeconds:600,generationSeconds:120},"重载后按持久化时间恢复，不从提交开始计算");
+const completed={...running,completedAt:721000};
+assert.deepEqual(runTiming(completed,9999999),{queueSeconds:600,generationSeconds:120},"完成后计时冻结");
+assert.deepEqual(runTiming({...queued,completedAt:301000},9999999),{queueSeconds:300,generationSeconds:null},"未执行即取消不产生生成时长");
+assert.deepEqual(runTiming({createdAt:9000,startedAt:10000,completedAt:null},8000),{queueSeconds:1,generationSeconds:0},"时钟回退不产生负数");
+const ui=readFileSync(new URL("../app/canvas-workspace.tsx",import.meta.url),"utf8");
+assert.doesNotMatch(ui,/startedAtRef|setElapsed/);
+assert.match(ui,/timing.queueSeconds/);
+assert.match(ui,/timing.generationSeconds === null/);
+assert.match(ui,/\["loading", "running", "decoding"\].includes\(next.status\)/);
+console.log("PASS: separate queue/execution timers, no execution timer before start, refresh continuity, terminal freeze, cancelled queued job and clock rollback");

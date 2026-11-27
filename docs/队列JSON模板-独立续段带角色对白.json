@@ -1,0 +1,48 @@
+{
+  "version": "shot-queue-v1",
+  "title": "格式模板：主镜头与续段各自保留角色对白",
+  "defaults": {
+    "workflow": "ultimate",
+    "generationMode": "auto",
+    "megapixels": 0.5,
+    "noBackgroundMusic": true
+  },
+  "chapters": [
+    {
+      "title": "主镜头",
+      "shots": [
+        {
+          "title": "对白A",
+          "prompt": "【填写本段画面及说话表演】 <Subject 1> says: <d>[Chinese] 【替换为主镜头台词】</d>",
+          "roleIds": ["替换为说话角色ID"],
+          "sceneAssetIds": ["替换为场景图片AssetID"],
+          "seconds": 10,
+          "aspect": "16:9",
+          "soundMode": "av",
+          "dialogue": [
+            { "roleId": "替换为说话角色ID", "text": "【替换为主镜头台词】" }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "独立续段",
+      "shots": [
+        {
+          "title": "对白A-续段",
+          "generationMode": "first-last",
+          "firstFrameFrom": { "shot": "对白A", "frame": "last" },
+          "prompt": "【填写承接尾帧的新画面及说话表演】 <Subject 1> says: <d>[Chinese] 【替换为续段自己的新台词】</d>",
+          "roleIds": ["替换为说话角色ID"],
+          "sceneAssetIds": ["替换为场景图片AssetID"],
+          "seconds": 8,
+          "aspect": "16:9",
+          "soundMode": "av",
+          "dialogue": [
+            { "roleId": "替换为说话角色ID", "text": "【替换为续段自己的新台词】" }
+          ]
+        }
+      ]
+    }
+  ]
+}

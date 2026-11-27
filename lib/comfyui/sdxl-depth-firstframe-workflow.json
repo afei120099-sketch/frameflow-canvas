@@ -1,0 +1,13 @@
+{
+  "1": { "class_type": "CheckpointLoaderSimple", "inputs": { "ckpt_name": "Juggernaut-XL_v9_RunDiffusionPhoto_v2.safetensors" }, "_meta": { "title": "SDXL checkpoint (Juggernaut XL v9)" } },
+  "2": { "class_type": "CLIPTextEncode", "inputs": { "text": "RAW photo, photorealistic interior photograph, natural soft daylight, realistic materials and textures, 35mm lens, sharp focus, high detail, an empty room with simple furniture", "clip": ["1", 1] }, "_meta": { "title": "Positive prompt" } },
+  "3": { "class_type": "CLIPTextEncode", "inputs": { "text": "cartoon, anime, illustration, painting, drawing, sketch, 3d render, cgi, plastic, grey clay model, untextured, blurry, lowres, noisy, deformed, distorted perspective, text, watermark, logo, frame, border", "clip": ["1", 1] }, "_meta": { "title": "Negative prompt" } },
+  "4": { "class_type": "LoadImage", "inputs": { "image": "frameflow_depth.png" }, "_meta": { "title": "Blender depth.png (near = white)" } },
+  "5": { "class_type": "ControlNetLoader", "inputs": { "control_net_name": "diffusion_pytorch_model.safetensors" }, "_meta": { "title": "SDXL ControlNet Union v1" } },
+  "6": { "class_type": "SetUnionControlNetType", "inputs": { "control_net": ["5", 0], "type": "depth" }, "_meta": { "title": "Union type: depth" } },
+  "7": { "class_type": "ControlNetApplyAdvanced", "inputs": { "positive": ["2", 0], "negative": ["3", 0], "control_net": ["6", 0], "image": ["4", 0], "strength": 0.8, "start_percent": 0.0, "end_percent": 0.8, "vae": ["1", 2] }, "_meta": { "title": "Depth control" } },
+  "8": { "class_type": "EmptyLatentImage", "inputs": { "width": 720, "height": 1280, "batch_size": 1 }, "_meta": { "title": "Latent (same pixels as depth.png)" } },
+  "9": { "class_type": "KSampler", "inputs": { "model": ["1", 0], "positive": ["7", 0], "negative": ["7", 1], "latent_image": ["8", 0], "seed": 0, "steps": 30, "cfg": 5.5, "sampler_name": "dpmpp_2m", "scheduler": "karras", "denoise": 1.0 }, "_meta": { "title": "KSampler" } },
+  "10": { "class_type": "VAEDecode", "inputs": { "samples": ["9", 0], "vae": ["1", 2] }, "_meta": { "title": "VAE decode" } },
+  "15": { "class_type": "SaveImage", "inputs": { "images": ["10", 0], "filename_prefix": "Frameflow_SDXL_DepthFirstFrame" }, "_meta": { "title": "Save first frame" } }
+}

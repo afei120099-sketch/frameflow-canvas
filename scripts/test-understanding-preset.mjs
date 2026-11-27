@@ -1,0 +1,40 @@
+import assert from "node:assert/strict";
+import { buildCommunityWorkflow } from "../lib/comfyui/experimental/h3-community.ts";
+import { UNDERSTANDING_VALUES, communityActualSteps, isUnderstandingPreset, validateCommunityValues } from "../lib/comfyui/experimental/h3-community-controls.ts";
+import { shotQueueH3Props, queueGeneration } from "../lib/shot-queue.ts";
+
+const settings = { length: 5 + 17 * 7, aspect: "16:9", megapixels: 0.5, turbo: true, steps: 10, fps: 24, loraStrength: 0.75, upscaleMethod: "lanczos", resolutionSteps: 32, soundMode: "av", noBackgroundMusic: false };
+const base = buildCommunityWorkflow("community-ultimate", ["a.png"], "p", 1, { ...settings });
+assert.deepEqual(base["125"].inputs.sigmas, ["147", 0], "default stays on manual sigmas");
+assert.equal(base["145"].inputs.strength_model, 0.75);
+assert.equal(base["165"].inputs.min_tokens, 12288);
+
+const values = { ...UNDERSTANDING_VALUES };
+validateCommunityValues("community-ultimate", values);
+assert.ok(isUnderstandingPreset(values));
+assert.equal(communityActualSteps("community-ultimate", values), 25);
+const w = buildCommunityWorkflow("community-ultimate", ["a.png"], "p", 1, { ...settings, communityParameters: JSON.stringify(values) });
+assert.deepEqual(w["125"].inputs.sigmas, ["160", 0]);
+assert.equal(w["160"].inputs.steps, 25);
+assert.equal(w["160"].inputs.scheduler, "simple");
+assert.deepEqual(w["160"].inputs.model, ["150", 0]);
+assert.equal(w["123"].inputs.sampler_name, "res_multistep");
+assert.equal(w["145"].inputs.strength_model, 0);
+assert.equal(w["127"].inputs.unet_name, base["127"].inputs.unet_name, "base UNet unchanged");
+assert.equal(w["165"].inputs.min_tokens, 1048576);
+assert.ok(!("sigmas_source" in w["125"].inputs));
+assert.throws(() => validateCommunityValues("community-dialogue", { "125.sigmas_source": "scheduler" }));
+
+const shot = { title: "s", prompt: "p", roleIds: [], sceneAssetIds: [], seconds: 5, aspect: "16:9", soundMode: "av" };
+const plan = { appearances: [], scenes: [], pictures: [] };
+assert.equal(queueGeneration(shot).tuning, "default");
+const plain = shotQueueH3Props(shot, plan);
+assert.equal(plain.communityParameters, undefined);
+assert.equal(plain.steps, 10);
+const u = shotQueueH3Props(shot, plan, { tuning: "understanding" });
+assert.deepEqual(JSON.parse(u.communityParameters), { "community-ultimate": values });
+assert.equal(u.steps, 25); assert.equal(u.loraStrength, 0); assert.equal(u.megapixels, 0.5);
+assert.equal(shotQueueH3Props({ ...shot, tuning: "default" }, plan, { tuning: "understanding" }).communityParameters, undefined, "shot overrides defaults");
+assert.equal(shotQueueH3Props({ ...shot, workflow: "fast" }, plan, { tuning: "understanding" }).communityParameters, undefined, "fast ignores preset");
+assert.equal(shotQueueH3Props({ ...shot, megapixels: 0.8 }, plan, { tuning: "understanding" }).megapixels, 0.8, "explicit MP wins");
+console.log("understanding preset: ok");

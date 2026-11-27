@@ -1,0 +1,98 @@
+/*
+ * Frameflow design tokens — the ONE place colours, type sizes and fonts are defined.
+ * Loaded after globals.css and before theme-atelier.css (see app/layout.tsx), so the
+ * values here win over the older :root blocks in globals.css.
+ *
+ * Direction (user decision 2026-11-10): black / white / grey, minimal, no purple.
+ * Greys are pure (R = G = B). The only hues are the low-saturation status colours below;
+ * to go fully monochrome, change the five "status" lines and nothing else.
+ *
+ * Design doc: docs/调研-界面设计方案.md
+ */
+:root {
+  /* surfaces, darkest to lightest */
+  --ff-bg: #0c0c0c;
+  --ff-canvas: #101010;
+  --ff-sunken: #0c0c0c;
+  --ff-surface: #151515;
+  --ff-raised: #1b1b1b;
+  --ff-control: #232323;
+  --ff-hover: #2d2d2d;
+  --ff-surface-2: var(--ff-raised);
+  --ff-surface-3: var(--ff-control);
+
+  /* lines */
+  --ff-line: rgba(255, 255, 255, .08);
+  --ff-line-strong: rgba(255, 255, 255, .16);
+  --ff-border: #2e2e2e;
+  --ff-border-soft: #242424;
+  --ff-border-strong: #3a3a3a;
+  --ff-border-hover: #4d4d4d;
+
+  /* text */
+  --ff-text: #ededed;
+  --ff-text-2: #a8a8a8;
+  --ff-text-3: #858585;
+  --ff-text-4: #858585;
+
+  /* emphasis: white on black. Text placed on it must use --ff-ink. */
+  --ff-white: #f5f5f5;
+  --ff-ink: #0c0c0c;
+  --ff-accent: var(--ff-white);
+  --ff-accent-strong: var(--ff-white);
+  --ff-accent-soft: rgba(255, 255, 255, .08);
+
+  /* status — the only hues in the interface (variant 2 of the design doc) */
+  --ff-run: #d6bd84;    /* 生成中 / in progress */
+  --ff-ok: #8fb89c;     /* 完成 / 已采用 */
+  --ff-warn: #d6bd84;   /* 提醒 / 漏写 */
+  --ff-bad: #dc8a7c;    /* 失败 / 写错 / danger */
+  --ff-queue: #8d9aa8;  /* 排队中 */
+  /* older names used across the stylesheets */
+  --ff-success: var(--ff-ok);
+  --ff-warning: var(--ff-warn);
+  --ff-danger: var(--ff-bad);
+  --ff-err: var(--ff-bad);
+  --ff-info: var(--ff-queue);
+
+  /* canvas link lines */
+  --ff-link: rgba(133, 133, 133, .62);
+  --ff-link-hover: var(--ff-white);
+  --ff-link-active: var(--ff-white);
+  --ff-link-flow: var(--ff-ok);
+
+  /* shape */
+  --ff-r-sm: 6px;
+  --ff-r: 9px;
+  --ff-r-lg: 14px;
+  --ff-shadow: 0 12px 32px -8px rgba(0, 0, 0, .6);
+  --ff-shadow-lg: 0 28px 80px -16px rgba(0, 0, 0, .75);
+  --ff-ease: cubic-bezier(.2, .7, .2, 1);
+
+  /* Fonts: installed system fonts only — nothing is fetched from the network and no
+     font files ship with the project. Noto Sans SC (思源黑体) and Cascadia Mono come
+     with Windows 11; older systems fall back to Microsoft YaHei and Consolas. */
+  --ff-font: "Noto Sans SC", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+  --ff-mono: "Cascadia Mono", "Cascadia Code", Consolas, monospace;
+
+  /* type scale for screen-space text */
+  --ff-fs-12: 12px;
+  --ff-fs-13: 13px;
+  --ff-fs-14: 14px;
+  --ff-fs-16: 16px;
+  --ff-fs-20: 20px;
+  --ff-fs-24: 24px;
+
+  /* Panels size their text with --fs-N (globals.css, N px × 1.28). Anything that
+     would land under 12px is floored here; canvas-node text is not affected. */
+  --fs-5: 12px;
+  --fs-6: 12px;
+  --fs-7: 12px;
+  --fs-8: 12px;
+  --fs-9: 12px;
+
+  --bg: var(--ff-bg);
+  --line: var(--ff-line-strong);
+  --muted: var(--ff-text-2);
+  --text: var(--ff-text);
+}

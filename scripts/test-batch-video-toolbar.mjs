@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import { readWorkspaceSource } from './workspace-source.mjs';
+const source=readWorkspaceSource();
+const start=source.indexOf('function BatchVideoActions(');
+const end=source.indexOf('data-testid="batch-video-actions"',start);
+const guard=source.slice(start,end).match(/if\((selection\.length<2&&!busy)\)return null;/)?.[1];
+assert(guard,'toolbar needs an explicit multiselect/active-batch visibility guard');
+const hidden=new Function('selection','busy','stage',`return ${guard};`);
+assert.equal(hidden([],false,''),true);
+assert.equal(hidden(['video'],false,''),true);
+assert.equal(hidden(['video'],false,'之前的批量任务已完成'),true);
+assert.equal(hidden(['one','two'],false,''),false);
+assert.equal(hidden([],true,'正在处理'),false);
+assert.equal(hidden(['one'],true,'正在处理'),false);
+console.log('PASS: single/empty selection hides toolbar; multiselect shows it; active batch progress stays accessible. No canvas mutation or GPU.');

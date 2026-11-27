@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const source = readFileSync(new URL('../app/canvas-workspace.tsx', import.meta.url), 'utf8');
+assert.ok(source.includes('communityWorkflow ? ["文本", "多参考", "顺序图片"]'));
+assert.ok(source.includes('ultimateKeyframes: view === "顺序图片"'));
+assert.ok(source.includes('"多参考图"'));
+assert.ok(source.includes('"首尾帧图"'));
+assert.ok(!source.includes('checked={communityKeyframeMode}'));
+assert.ok(source.indexOf('<header className="creative-dock-header">') < source.indexOf('data-testid="ultimate-keyframes"'));
+assert.ok(source.includes('label="尾帧 · Picture 2"'));
+console.log('PASS community mode tabs: explicit reference/keyframe selection, header before slots, no separate checkbox');

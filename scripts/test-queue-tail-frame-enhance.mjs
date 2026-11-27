@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+import ts from 'typescript';
+import {boundedLock} from '../lib/operation-scope.ts';
+const source=readFileSync('lib/queue-tail-frame-enhance.ts','utf8');
+const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+const meta=new Map(),assets=new Map();let posts=0,registers=0,last,failCheckpoint=false;
+const mod={exports:{}};
+const hd={assetId:'hd',storageReference:'image:hd',filename:'hd.png',width:640,height:360};
+vm.runInNewContext(code,{exports:mod.exports,require:name=>{
+  if(name.includes('operation-scope'))return {boundedLock};
+  if(name.includes('image-integrity'))return {imageProof:async()=>({width:640,height:360,bytes:3,sha256:'cpu-stub'})};
+  if(name.includes('production-records'))return {getAsset:async id=>assets.get(id),getAssetBySource:async src=>[...assets.values()].find(a=>a.storageReference===src)??null,getMeta:async key=>meta.get(key),putMeta:async(key,value)=>meta.set(key,value),registerAsset:async data=>{registers++;const asset={...data,assetId:'original'};assets.set('original',asset);return asset;}};
+  if(name.includes('local-video-store'))return {getLocalImageBlob:async()=>new Blob(['png'],{type:'image/png'}),storeLocalImage:async()=> 'image:original'};
+  if(name.includes('tail-frame-hd-job'))return {tailFrameEnhanceKey:id=>'frame-image-enhance:tail-lab-v1:'+id,enhanceTailPNG:async(id,stage,reserve)=>{assert.equal(last.enhancement.originalAssetId,id,'original session checkpoint precedes GPU');const key='frame-image-enhance:tail-lab-v1:'+id;if(!meta.has(key)){await reserve('hd-prompt');posts++;meta.set(key,{promptId:'hd-prompt'});}return hd;}};
+  throw Error(name);
+},Blob,FileReader:class{readAsDataURL(){this.result='data:image/png;base64,SEQtVEFJTA==';this.onload();}}});
+const frame={src:'data:image/png;base64,T1JJR0lOQUw=',name:'tail.png',sourceRunId:'r',sourceAssetId:'v',sourceFrame:'last',seconds:5.999,width:320,height:180};
+const checkpoint=async value=>{if(failCheckpoint)throw Error('session save failed');last=structuredClone(value);};
+const enhance=mod.exports.enhanceQueueTailFrame;
+const result=await enhance(frame,checkpoint,()=>{},()=>{});
+assert.equal(posts,1);assert.equal(registers,1);assert.equal(result.width,640);assert.equal(result.enhancement.promptId,'hd-prompt');assert.equal(result.enhancement.completedAssetId,'hd');assert.equal(frame.src,'data:image/png;base64,T1JJR0lOQUw=');
+assert.equal(result.src,'image:hd','HD tail keeps the stored image: reference, never inline base64');
+await enhance(result,checkpoint,()=>{},()=>{});assert.equal(posts,1,'resume recognizes existing task');assert.equal(registers,1,'resume keeps original asset');
+assert.equal(await enhance({...frame,sourceFrame:'first'},checkpoint,()=>{},()=>{}).then(r=>r.sourceFrame),'first');assert.equal(posts,1);
+failCheckpoint=true;await assert.rejects(enhance({...frame,sourceRunId:'new'},checkpoint,()=>{},()=>{}),/session save failed/);assert.equal(posts,1,'failed checkpoint never submits GPU');
+await assert.rejects(enhance(frame,checkpoint,()=>{throw new DOMException('stop','AbortError');},()=>{}),{name:'AbortError'});assert.equal(posts,1);
+assert.match(source,/boundedLock/);
+// A queue frame already stored as an asset (image: reference) is reused, not saved again.
+failCheckpoint=false;const registersBefore=registers;assets.set('stored',{assetId:'stored',storageReference:'image:stored',filename:'stored.png',width:320,height:180});
+const storedResult=await enhance({...frame,src:'image:stored',seconds:4.5},checkpoint,()=>{},()=>{});
+assert.equal(registers,registersBefore,'stored frame is not registered twice');assert.equal(storedResult.enhancement.originalAssetId,'stored');assert.equal(storedResult.src,'image:hd');
+console.log('PASS actual queue-tail adapter with CPU stubs: original/session saved before GPU, HD dimensions/receipt, reuse without repost, first-frame untouched, storage failure and Abort prevent submission.');

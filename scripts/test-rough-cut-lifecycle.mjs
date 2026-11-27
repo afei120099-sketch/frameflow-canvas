@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+const ui=readFileSync(new URL('../components/rough-cut-dialog.tsx',import.meta.url),'utf8');
+assert.match(ui,/if \(preparing.current \|\| running.current \|\| stopped.current\) return/);
+assert.match(ui,/if \(mounted\) void prepare\("first"\)/);
+assert.match(ui,/if \(stopped.current && !running.current\) void dropJob\(\)/);
+const cleanup=ui.slice(ui.indexOf('return () => {\n      mounted = false'),ui.indexOf('}, [prepare]);'));
+assert.doesNotMatch(cleanup,/cancelRoughCutJob|failRoughCut/,'effect cleanup must not cancel live jobs or mark them failed');
+assert.doesNotMatch(ui,/markInterruptedRoughCuts\(/,'mounting another dialog must not mark another live export interrupted');
+assert.match(ui,/phase.kind !== "ready" \|\| running.current \|\| preparing.current/,'synchronous start gate prevents duplicate start');
+const plugin=readFileSync(new URL('./rough-cut-vite-plugin.ts',import.meta.url),'utf8');
+assert.match(plugin,/Symbol.for\("frameflow.rough-cut-jobs.v1"\)/);
+assert.doesNotMatch(plugin,/jobs.disposeAll\(\)/,'HTTP server reload cannot kill exports');
+console.log('PASS lifecycle wiring: effect replay preparation, single start, no unmount cancellation, no mount-wide interruption, service reload retention');

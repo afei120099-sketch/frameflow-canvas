@@ -1,0 +1,80 @@
+{
+  "version": "shot-queue-v1",
+  "title": "格式模板：主镜头、续拍、过渡，均独立输出",
+  "defaults": {
+    "workflow": "ultimate",
+    "generationMode": "auto",
+    "megapixels": 0.5,
+    "seed": "random",
+    "noBackgroundMusic": true
+  },
+  "chapters": [
+    {
+      "title": "第一阶段：主镜头",
+      "shots": [
+        {
+          "title": "镜头A",
+          "prompt": "【填写镜头A的画面提示词：人物、场景、动作与结束状态】",
+          "roleIds": ["替换为角色ID"],
+          "sceneAssetIds": ["替换为场景图片AssetID"],
+          "seconds": 10,
+          "aspect": "16:9",
+          "soundMode": "ambient",
+          "autoVoiceDisabled": true
+        },
+        {
+          "title": "镜头B",
+          "prompt": "【填写镜头B自己的画面提示词，说明B的开场画面】",
+          "roleIds": ["替换为角色ID"],
+          "sceneAssetIds": ["替换为场景图片AssetID"],
+          "seconds": 10,
+          "aspect": "16:9",
+          "soundMode": "ambient",
+          "autoVoiceDisabled": true
+        }
+      ]
+    },
+    {
+      "title": "第二阶段：独立续段和过渡",
+      "shots": [
+        {
+          "title": "镜头A-续段1",
+          "generationMode": "first-last",
+          "firstFrameFrom": { "shot": "镜头A", "frame": "last" },
+          "prompt": "【填写续段1的新动作提示词，从镜头A结束的画面继续，不重复上一段已完成的动作】",
+          "roleIds": ["替换为角色ID"],
+          "sceneAssetIds": ["替换为场景图片AssetID"],
+          "seconds": 8,
+          "aspect": "16:9",
+          "soundMode": "ambient",
+          "autoVoiceDisabled": true
+        },
+        {
+          "title": "镜头A到B-过渡",
+          "generationMode": "first-last",
+          "firstFrameFrom": { "shot": "镜头A", "frame": "last" },
+          "lastFrameFrom": { "shot": "镜头B", "frame": "first" },
+          "prompt": "【填写从镜头A尾帧到镜头B首帧之间发生的动作或运镜；两端差异太大不保证自然过渡】",
+          "roleIds": ["替换为角色ID"],
+          "sceneAssetIds": ["替换为场景图片AssetID"],
+          "seconds": 5,
+          "aspect": "16:9",
+          "soundMode": "ambient",
+          "autoVoiceDisabled": true
+        },
+        {
+          "title": "镜头A-续段2",
+          "generationMode": "first-last",
+          "firstFrameFrom": { "shot": "镜头A-续段1", "frame": "last" },
+          "prompt": "【填写续段2的新动作提示词，从续段1结束的画面继续】",
+          "roleIds": ["替换为角色ID"],
+          "sceneAssetIds": ["替换为场景图片AssetID"],
+          "seconds": 6,
+          "aspect": "16:9",
+          "soundMode": "ambient",
+          "autoVoiceDisabled": true
+        }
+      ]
+    }
+  ]
+}

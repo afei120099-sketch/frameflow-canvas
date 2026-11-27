@@ -1,0 +1,20 @@
+{
+  "$comment": "Autopilot M2 director settings. No secrets here: the Anthropic key is read only from the ANTHROPIC_API_KEY environment variable. Model / prices verified against platform.claude.com (models overview, pricing, structured outputs, rate limits, errors, authentication) on 2026-09-27; re-check before changing. Product default director: local LM Studio (no paid API); mock is for tests, Claude stays available only with a key.",
+  "defaultDirector": "local-lmstudio",
+  "claude": {
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "maxTokens": 16000,
+    "requestTimeoutMs": 180000,
+    "maxNetworkRetries": 2,
+    "maxRetryAfterSeconds": 60,
+    "baseUrl": "https://api.anthropic.com",
+    "pricingVerifiedAt": "2026-09-27",
+    "pricingUsdPerMTok": {
+      "claude-opus-5-5": { "input": 4, "output": 20, "cacheWrite5m": 5, "cacheRead": 0.2 },
+      "claude-opus-5": { "input": 5, "output": 25, "cacheWrite5m": 6.25, "cacheRead": 0.5 },
+      "claude-sonnet-5": { "input": 2, "output": 10, "cacheWrite5m": 2.5, "cacheRead": 0.2 },
+      "claude-haiku-4-5": { "input": 1, "output": 5, "cacheWrite5m": 1.25, "cacheRead": 0.1 }
+    }
+  }
+}

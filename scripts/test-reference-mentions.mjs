@@ -1,0 +1,17 @@
+import assert from 'node:assert/strict';
+import { mentionQuery, insertMention, referencedLabels } from '../lib/reference-mentions.ts';
+import { readFileSync } from 'node:fs';
+assert.deepEqual(mentionQuery('人物使用 @图', 7), { start: 5, end: 7, query: '图' });
+assert.deepEqual(mentionQuery('人物使用@图', 6), { start: 4, end: 6, query: '图' });
+assert.equal(mentionQuery('邮箱 a@b', 6), null);
+assert.equal(mentionQuery('已经 <Picture 1>', 14), null);
+assert.deepEqual(insertMention('前 @1 后', 2, 4, '<Picture 1>'), { text: '前 <Picture 1> 后', cursor: 13 });
+assert.deepEqual(insertMention('abc', 1, 2, '<Video 1>'), { text: 'a<Video 1> c', cursor: 11 });
+assert.deepEqual(referencedLabels('<Picture 1> <Picture 1> <Video 2> <Subject 3>'), ['<Picture 1>', '<Video 2>', '<Subject 3>']);
+const component = readFileSync(new URL('../components/canvas/reference-prompt-editor.tsx', import.meta.url), 'utf8');
+assert.match(component, /buildReferenceManifest\(/);
+assert.match(component, /readH3Roles\(/);
+assert.match(component, /getAssetBySource\(item.src\)/);
+assert.doesNotMatch(component, /ensureLegacyAsset|storeLocal|fetch\(/, 'reference preview must not upload or register assets');
+assert.match(component, /loaded\?\.key === key/, 'stale async reference data must not be displayed');
+console.log('PASS reference mention cursor insertion, deduped labels, email exclusion, manifest ordering and read-only wiring');

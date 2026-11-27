@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {frameEntriesToResume} from '../lib/shot-queue-frames.ts';
+import {parseShotQueue} from '../lib/shot-queue.ts';
+import {newQueueSession,maySubmitQueueEntry} from '../lib/shot-queue-session.ts';
+import {harness} from './test-inbox-scheduler.mjs';
+import {inboxProgress} from '../lib/inbox-queue-report.ts';
+const shot={title:'Main',prompt:'CPU-only rollout regression',roleIds:[],sceneAssetIds:[],seconds:6,aspect:'16:9',soundMode:'ambient'};
+const queue=parseShotQueue(JSON.stringify({version:'shot-queue-v1',title:'CPU rollout',chapters:[{title:'test',shots:[shot,{...shot,title:'Tail',generationMode:'first-last',firstFrameFrom:{shot:'Main',frame:'last'}}]}]}));
+const batch=newQueueSession('page:target',queue,{x:0,y:0});batch.entries[0].nodeId='n1';batch.entries[0].submissionState='accepted';batch.entries[1].nodeId='n2';
+const runs=[{runId:'r1',ownerNodeId:'n1',createdAt:1,status:'completed',outputAssetIds:['v1']}];
+assert.equal(frameEntriesToResume(batch,runs).length,1,'new explicitly started batches retain automatic continuation');
+const legacy=structuredClone(batch);delete legacy.autoContinueFrames;assert.deepEqual(frameEntriesToResume(legacy,runs),[],'old saved sessions are observe-only');
+assert.equal(inboxProgress(legacy,runs,[{assetId:'v1',kind:'video',filename:'main.mp4',storageReference:'video:main'}]).state,'stopped','completed primary with a stopped pending tail is not running');
+const stopped=structuredClone(batch);stopped.stoppedAt=1;stopped.autoContinueFrames=false;assert.deepEqual(frameEntriesToResume(stopped,runs),[]);
+for(const field of ['removedAt','cancelRequestedAt','cancelledAt']){const b=structuredClone(batch);b.entries[1][field]=1;assert.deepEqual(frameEntriesToResume(b,runs),[]);}
+assert.equal(maySubmitQueueEntry({chapter:0,shot:0,nodeId:'n',outcome:'failed',submissionState:'pending'},[{ownerNodeId:'n',createdAt:1,status:'cancelled'}]),false);
+const guard={version:1,installedAt:new Date().toISOString(),protectedQueueHashes:['new-hash'],protectedCommandIds:['old-command'],reason:'no replay'};
+const protectedBatch=await harness({extraFiles:{'_inbox_rollout_guard.json':guard}});
+assert.equal(protectedBatch.data.handoffs,0);assert.equal(protectedBatch.disk.get('new_queue_status.json').submissionHeld,true);await protectedBatch.tick();assert.equal(protectedBatch.data.handoffs,0);protectedBatch.cleanup();
+let resumes=0;
+const command=await harness({paused:true,extraFiles:{'_inbox_rollout_guard.json':guard},command:{commandId:'old-command',action:'resume',pageId:'page:target',sessionId:'old',requestId:'old'},controller:{resume:async()=>resumes++}});
+assert.equal(resumes,0);assert.equal(command.disk.get('_inbox_command_status.json').state,'held');command.cleanup();
+const historical=await harness({paused:true,receipts:{old:{file:'past_queue.json',result:'completed',pageId:'page:target',sessionId:'past',at:'2000-01-01',details:{outputs:[{assetId:'historical-video'}]}}}});
+assert.equal(historical.disk.get('past_queue_status.json').state,'completed');assert.equal(historical.disk.get('past_queue_status.json').outputs[0].assetId,'historical-video');historical.cleanup();
+const hook=readFileSync('components/use-shot-queue-execution.ts','utf8');
+assert.match(hook,/(?:saved|session\.current)\.autoContinueFrames\s*=\s*false;\s*(?:saved|session\.current)\.stoppedAt\s*=\s*Date\.now\(\);[\s\S]{0,200}persist\((?:saved|session\.current)/);
+console.log('PASS rollout: legacy/stopped/cancelled/deleted never resume, old hashes and old commands held, new batches still auto-continue, historical terminal status preserved; CPU only');

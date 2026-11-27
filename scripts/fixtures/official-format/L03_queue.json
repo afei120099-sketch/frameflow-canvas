@@ -1,0 +1,36 @@
+{
+  "version": "shot-queue-v1",
+  "title": "《示例项目》EP02 v5 标准队列 L03（官方格式）",
+  "defaults": {
+    "workflow": "ultimate",
+    "generationMode": "auto",
+    "megapixels": 0.45,
+    "seed": "random",
+    "noBackgroundMusic": false
+  },
+  "chapters": [
+    {
+      "title": "2-4 张三办公室（标准队列实测）",
+      "shots": [
+        {
+          "title": "EP02-std-L03｜抬头等她过来（官方格式）",
+          "prompt": "subject_definitions:\n<Subject 1> is the office defined by <Picture 1> (the window side: desk, chair, glass door, and window; the layout of this shot follows it) and <Picture 2> (the front of the same office, used only to confirm the room layout). In the target video it is night and the office is brightly lit: ceiling downlights throw bright white light over the whole room, a strip of warm lights around the bookshelf adds depth to the background, a desk lamp on the right corner of the desk casts warm yellow light on both faces and on the papers, and the city at night is outside the window. Faces are evenly lit and slightly bright, with natural warm skin tones.\n<Subject 2> is Zhang San from <Picture 3>, a man in his early thirties wearing a dark suit jacket, a buttoned light-blue shirt, a belt, and suit trousers; his hair length and hairstyle stay the same throughout the shot.\n<Subject 3> is Li Si from <Picture 4>, a woman in her mid-twenties wearing a buttoned white cotton shirt, a dark suit jacket, and dark trousers; her hair length and hairstyle stay the same throughout the shot.\n\nsummary:\n[reference generation] In <Subject 1> at night, the seated <Subject 2> looks up at <Subject 3> and tells her in two short sentences that her marked spot is wrong and to come over, and she answers in three short sentences that she has not finished reading yet and asks him to wait.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1]): partially_preserved - the desk, chair, glass door, bookshelf, and window layout are retained; the lighting follows the night description.\n<Subject 2> (appears in [Shot 1]): fully_preserved - his face, hair length, hairstyle, and clothing are retained.\n<Subject 3> (appears in [Shot 1]): fully_preserved - her face, hair length, hairstyle, and clothing are retained.\n\ndetailed_description:\nThe target video is live-action and realistic, vertical 9:16, with Kodak Vision3 250D film grain, natural skin texture with visible pores and fine vellus hair, crisp fabric weave and folds, and a lived-in look; it is one continuous take with no cuts.\n[Shot 1] A fixed low-angle medium close-up from below the edge of the desk, 35mm-equivalent lens, with depth of field reaching both faces and the glass door and bookshelf in the background softly blurred. The edge of the desk and the red-pen-marked draft on it fill the lower foreground, clearly visible; the two of them are in the midground; the glass door is in the background at the center, its panel resting in the frame. <Subject 2> sits in the chair on the left of the frame, body turned toward the right, three-quarter face in the upper left third, his left palm flat on the marked draft and his right hand on the armrest. <Subject 3> stands on the right of the frame at the door side of the desk, body turned toward the left, three-quarter face in the upper right third, about two steps away across the corner of the desk, both hands down at her sides with her right fingertips lightly against the seam of her trousers. <Subject 2> raises his eyes to her, his jaw tightening slightly, and taps the red circle on the draft once with his left index finger with a light paper sound. <Subject 2>, a man in his early thirties with a low, close voice (S1), says: <d>[Chinese] 这张表算错了。过来，我指给你看。</d> He closes his mouth and keeps his left index finger on the red circle. <Subject 3> looks at him, blinks once, and her right fingers tighten against the trouser seam as she holds her breath for a moment, feet staying where they are. Her eyes drop to the marked draft on the desk and come back up to him, her chin lifting slightly, and <Subject 3>, a young woman with a soft, restrained voice (S2), answers: <d>[Chinese] 等等啊。我这一页还没改完呢，你先坐。</d> She closes her mouth. <Subject 2> listens, his brows drawing together slightly, his left hand still pressed on the draft. <Subject 3> keeps looking at him, her feet staying on the right, her right fingers still against the trouser seam. The final frame holds on her standing on the right, still looking at him, and him seated on the left with his left hand on the draft, looking at her.\n\noverall_soundscape:\nQuiet office room tone throughout, with one light paper sound when his index finger taps the draft.\n\nnon_diegetic_music:\nN/A",
+          "roleIds": [
+            "99e67465-7b1e-494b-befa-53a85534a365",
+            "c68aa343-fccb-4877-a776-2fc30bef7df0"
+          ],
+          "sceneAssetIds": [
+            "e92fb0cf-c50b-46ff-84bb-cfc13e7c2e1d",
+            "d3fd300a-8936-486b-93a7-11f3bedbdd20"
+          ],
+          "seconds": 12,
+          "aspect": "9:16",
+          "soundMode": "av",
+          "generationMode": "auto",
+          "dialogue": [],
+          "autoVoiceDisabled": true
+        }
+      ]
+    }
+  ]
+}

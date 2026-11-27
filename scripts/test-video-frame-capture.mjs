@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {buildFrameImageEnhance,frameEnhanceSize,runFrameImageEnhance} from '../lib/comfyui/frame-image-enhance.ts';
+assert.deepEqual(frameEnhanceSize(1920,1080),{width:3840,height:2160});
+assert.deepEqual(frameEnhanceSize(1280,736),{width:2560,height:1472});
+assert.deepEqual(frameEnhanceSize(3000,2000),{width:4096,height:2730});
+assert.throws(()=>frameEnhanceSize(4096,2160),/上限/);
+const graph=buildFrameImageEnhance('frame.png',1280,736);
+assert.equal(graph['66:59'].inputs.color_correction_method,'none','ordinary frame capture unchanged');
+assert.equal(buildFrameImageEnhance('frame.png',1280,736,'lab')['66:59'].inputs.color_correction_method,'lab','tail-frame caller enables original color matching');
+assert.equal(graph['load-frame'].class_type,'LoadImage');assert.equal(graph['7'].class_type,'SaveImage');
+assert.equal(graph['66:52'].inputs.unet_name,'seedvr2_7b_sharp_int8_convrot.safetensors');
+assert.ok(Object.values(graph).every(node=>!['LoadVideo','SaveVideo','CreateVideo','GetVideoComponents'].includes(node.class_type)));
+for(const node of Object.values(graph))for(const value of Object.values(node.inputs))if(Array.isArray(value)&&typeof value[0]==='string'&&typeof value[1]==='number')assert.ok(graph[value[0]],'no dangling input '+value[0]);
+const info=Object.fromEntries(Object.values(graph).map(n=>[n.class_type,{input:{required:{}}}]));
+info.UNETLoader.input.required.unet_name=[['seedvr2_7b_sharp_int8_convrot.safetensors']];info.VAELoader.input.required.vae_name=[['seedvr2_ema_vae_fp16.safetensors']];
+let posts=0,reserved='',calls=[];
+const fake=async(url,init)=>{
+ calls.push(url);if(url.endsWith('/object_info'))return Response.json(info);
+ if(url.endsWith('/upload/image'))return Response.json({name:'test.png'});
+ if(url.endsWith('/prompt')){posts++;const body=JSON.parse(init.body);assert.equal(body.prompt_id,reserved);return Response.json({prompt_id:reserved});}
+ if(url.includes('/history/'))return Response.json({[reserved]:{outputs:{'7':{images:[{filename:'enhanced.png'}]}},status:{completed:true}}});
+ if(url.includes('/view?'))return new Response(new Blob(['fakepng'],{type:'image/png'}));
+ throw Error(url);
+};
+const result=await runFrameImageEnhance(new Blob(['png']),1280,736,{fetch:fake,onReserved:async id=>{reserved=id;}});
+assert.equal(result.filename,'enhanced.png');assert.equal(posts,1);assert.ok(reserved);
+await assert.rejects(runFrameImageEnhance(new Blob(['png']),1280,736,{fetch:async(url,init)=>url.endsWith('/prompt')?Promise.reject(Error('offline')):fake(url,init),onReserved:async id=>{reserved=id;}}),/状态待确认/);
+const store=readFileSync(new URL('../lib/local-video-store.ts',import.meta.url),'utf8');
+assert.match(store,/canvas.width = video.videoWidth/);assert.match(store,/typeof edge === "number" \? "image\/png"/);
+const ui=readFileSync(new URL('../components/canvas/video-frame-capture.tsx',import.meta.url),'utf8');
+assert.ok(ui.indexOf('await place(asset,chosen.nodeId)')<ui.indexOf('runFrameImageEnhance(await'),'original stored/placed before AI');
+assert.match(ui,/查询原增强任务（不重提）/);
+console.log('PASS PNG source dimensions, image-only SeedVR2 graph, bounded output, persistent original, one POST/reserved ID, ambiguous-submit guard; fake API, no GPU');
