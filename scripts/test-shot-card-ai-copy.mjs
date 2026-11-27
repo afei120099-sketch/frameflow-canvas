@@ -72,7 +72,7 @@ const clean = aiFixText({ queueTitle: "Q", chapters: ["一"], zhengbenVersion: "
 assert.deepEqual(clean, { count: 0, text: "「Q」写错的镜头：没有问题，不用改。（正本 v1）" });
 
 // 标准范本（本机有正本时）：0 漏写、五项过 → 没有问题。
-const SAMPLE = `${process.env.FRAMEFLOW_H3_TOOLS || "h3-tools"}/范本/示例项目_EP02v5_L03_标准/示例项目_EP02v5_L03_标准_queue.json`;
+const SAMPLE = new URL("./fixtures/episode-settings/sample-complete.json", import.meta.url);
 if (existsSync(SAMPLE)) {
   const sample = parseShotQueue(readFileSync(SAMPLE, "utf8"));
   const sampleRows = queueCompleteness(sample, () => ({ visible: ["张三", "李四"], all: ["张三", "李四"] }));

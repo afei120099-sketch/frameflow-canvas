@@ -166,8 +166,6 @@ export function useInboxScheduler(editor: Editor, onImportImage: (file: File) =>
               map[f.name] = asset.assetId; state.images[f.name] = {sha256:f.sha256!,assetId:asset.assetId};
               await write(project,"assets_map.json",map); await save();
             }
-            // The 2026-10-19 one-shot 仙侠 relocation is retired: its backup file is not on the inbox write
-            // whitelist, so it retried every scan, and running it now would rearrange the curated 仙侠 page.
             if (await placeImages(editor,state)) await save();
             await runInboxDelete(editor,project,files,write);
             // Local one-shot command: never edit a receipt or clear the global claim gate to resume.
@@ -268,7 +266,7 @@ export function useInboxScheduler(editor: Editor, onImportImage: (file: File) =>
                 }
               }
               // Legacy 'submitted' meant handoff only. Audit instead of replaying it.
-              if (r.result === "submitted" || (r.result === "cleared" && r.file === "EP01_R3_test_S01-S08_queue.json")) {
+              if (r.result === "submitted") {
                 if (!r.queueJson) {
                   try { const data=await json<unknown>({op:"file",project,name:r.file}); resolveNames(data,map); r.queueJson=JSON.stringify(parseShotQueue(JSON.stringify(data))); } catch { /* invalid legacy data remains blocked */ }
                 }

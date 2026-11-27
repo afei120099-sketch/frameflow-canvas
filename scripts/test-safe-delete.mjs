@@ -47,7 +47,7 @@ const a=holdNodeTask('local'),b=holdNodeTask('local');assert.equal(hasNodeTask('
 const hold=holdNodeTask('shape:test');assert.equal((await inspectNodeRemoval(editorFor(),['shape:test'])).reason,'busy','real default guard recognizes the synchronous task registry before any DB read');hold();
 
 // Real GET-only probe: result kind, failure, ambiguity, finish-between-reads, malformed/offline.
-for(const[kind,save,key,name]of [['image','7','images','test.png'],['audio','4','audio','test.mp3'],['audio','9','audio','song.mp3'],['video','16','videos','test.mp4']]){
+for(const[kind,save,key,name]of [['image','7','images','test.png'],['audio','4','audio','test.mp3'],['audio','9','audio','role-c.mp3'],['video','16','videos','test.mp4']]){
   const request=async(path,init)=>{assert.equal(init.method,undefined);assert.match(path,/\/history\//);return new Response(JSON.stringify({id:{status:{completed:true,status_str:'success'},outputs:{[save]:{[key]:[{filename:name}]}}}}));};
   assert.equal(await probeRemovalTask('id',kind,save,request),'completed');cases++;
 }

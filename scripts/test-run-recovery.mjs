@@ -3,7 +3,7 @@ import { ACTIVE_RUN_ERROR, claimNode, createRunExclusively, finalizeRunOutput, f
 import { comfyUIH3Adapter } from "../lib/comfyui/h3-adapter.ts";
 import { ComfyConnectionError, SubmissionUncertainError } from "../lib/ai-adapter.ts";
 
-const RUN_ID = "3f2b8c1e-8d7a-4c1b-9e0f-2a6b5c4d3e21";
+const RUN_ID = "00000000-0000-4000-8000-000000000017";
 const run = (overrides = {}) => ({ schemaVersion: 1, runId: RUN_ID, capabilityId: "h3_fl2va", status: "running", createdAt: 1, startedAt: 1, completedAt: null, comfyPromptId: RUN_ID, submission: "accepted", ownerNodeId: "shape:h3", inputAssetIds: [], outputAssetIds: [], rawPrompt: "p", finalPrompt: "p", seed: 1, parameters: {}, workflowIdentity: { capabilityId: "h3_fl2va", templateVersion: "sha256:x", templateFile: "h3-workflow.json" }, error: null, ...overrides });
 const noSleep = async () => {};
 /** Scripted fake ComfyUI. It has no submit(): recovery must never need one. */
@@ -63,7 +63,7 @@ const watch = (target, client, extra = {}) => { const phases = []; return watchR
   assert.equal(assets.size, 1);
 
   // Crash between Asset write and Run update: the orphan Asset (sourceRunId) is attached, not duplicated.
-  const orphanRunId = "0b6f3e2a-1c4d-4e5f-8a9b-7c6d5e4f3a21";
+  const orphanRunId = "00000000-0000-4000-8000-000000000018";
   runs.set(orphanRunId, run({ runId: orphanRunId, comfyPromptId: orphanRunId }));
   assets.set("orphan", { assetId: "orphan", kind: "video", sourceRunId: orphanRunId, filename: "o.mp4", storageReference: "media:orphan" });
   const attached = await finalizeRunOutput(orphanRunId, store, produce);

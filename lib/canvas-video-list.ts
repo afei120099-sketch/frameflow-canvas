@@ -46,7 +46,7 @@ export type VideoListRow = { title: string; path: string | null };
 /**
  * 拼成纯文本：
  *   共 54 个视频（按画布从左到右、从上到下排序）
- *   01｜EP10-v1-10-1｜新名牌｜D:\…\Frameflow_H3_ultimate_01732-audio.mp4
+ *   01｜S01｜新名牌｜D:\…\Frameflow_H3_ultimate_sample-audio.mp4
  *   …
  *   其中 2 个没找到本机文件：序号 03、17
  * 序号至少两位补零，超过 99 个就三位（以此类推）。

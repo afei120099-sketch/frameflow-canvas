@@ -82,11 +82,11 @@ assert.match(board, /zoomRef: \(tag\) => setViewingRef\(\{ key: card\.key, tag \
 // ── 参考图 ID（2026-11-12 用户：「这个上面带上图片ID，还要能复制」「角色也是的」） ──
 {
   const { refIds, clipMiddle } = await import("../lib/shot-card-viewer.ts");
-  const ROLE = "c68aa343-fccb-4877-a776-2fc30bef7df0", LOOK = "asset_look_000000000001", SCENE = "asset_scene_00000000001";
+  const ROLE = "00000000-0000-4000-8000-00000000000b", LOOK = "asset_look_000000000001", SCENE = "asset_scene_00000000001";
   assert.deepEqual(refIds({ roleId: ROLE, assetId: LOOK }), [{ kind: "角色 ID", id: ROLE }, { kind: "图片 ID", id: LOOK }], "角色图：角色 ID 在前，外观图片 ID 在后，分清楚");
   assert.deepEqual(refIds({ assetId: SCENE }), [{ kind: "图片 ID", id: SCENE }], "场景图：sceneAssetIds 里那个图片 ID");
   assert.deepEqual(refIds({}), []);
-  assert.equal(clipMiddle(ROLE), "c68aa343…2fc30bef7df0"); assert.equal(clipMiddle("short-id"), "short-id");
+  assert.equal(clipMiddle(ROLE), "00000000…00000000000b"); assert.equal(clipMiddle("short-id"), "short-id");
   const viewer = await readFile(new URL("../components/shot-card-video-viewer.tsx", import.meta.url), "utf8");
   assert.match(viewer, /<code title=\{item\.id\}>\{clipMiddle\(item\.id\)\}<\/code><button[^>]*onClick=\{\(\) => void copyPlainText\(item\.id, `已复制\$\{item\.kind\}`\)\}>复制<\/button>/, "放大层：截中间、悬停全文、复制纯 ID、右下角提示");
   assert.match(board, /roleId: picture\.roleId, assetId: picture\.assetId \}\)\)\} \/>/, "卡片把 ID 传给放大层");

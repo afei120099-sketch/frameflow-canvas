@@ -5,11 +5,11 @@ import { queueCardReport } from "../lib/shot-card-report.ts";
 // The inbox writes this report into *_status.json (cardChecks); the card shows the same checks.
 const role = (roleId, displayName, extra = {}) => ({ roleId, displayName, appearanceAssetIds: [], voiceAssetIds: [], primaryAppearanceAssetId: `${roleId}-look`, primaryVoiceAssetId: `${roleId}-voice`, description: "", ...extra });
 const asset = (assetId, kind = "image") => ({ assetId, kind, storageReference: `local:${assetId}`, filename: `${assetId}.png`, createdAt: 1 });
-const roles = [role("zy", "张三"), role("lw", "李四", { primaryVoiceAssetId: null })];
-const assets = [asset("zy-look"), asset("zy-voice", "audio"), asset("lw-look"), asset("office")];
+const roles = [role("roleA", "张三"), role("roleB", "李四", { primaryVoiceAssetId: null })];
+const assets = [asset("roleA-look"), asset("roleA-voice", "audio"), asset("roleB-look"), asset("office")];
 const queue = { version: "shot-queue-v1", title: "t", defaults: { noBackgroundMusic: true }, chapters: [{ title: "c", shots: [
-  { title: "L01｜好镜头", prompt: "参考说明：<Picture 1>是办公室；<Picture 2>是张三，只用于张三的脸、发型和服装。\n写实，Kodak Vision3 250D 胶片颗粒，台灯在画右，暖光照脸。\n他在画左，坐在椅子上。中景，50mm 等效，浅景深，机位固定。\n主要动作：他翻页。\n0-3秒：他用右手翻一页稿子。\n3-5.17秒：他抬眼看门口。\n声音：纸页轻响，房间底噪。", roleIds: ["zy"], sceneAssetIds: ["office"], seconds: 5, aspect: "9:16", soundMode: "ambient" },
-  { title: "L02｜李四开口", prompt: "主要动作：李四说话。\n0-3秒：李四开口。\n声音：底噪。没有背景音乐。", roleIds: ["lw"], sceneAssetIds: [], seconds: 6, aspect: "9:16", soundMode: "av", dialogue: [{ roleId: "lw", text: "好。" }] },
+  { title: "L01｜好镜头", prompt: "参考说明：<Picture 1>是办公室；<Picture 2>是张三，只用于张三的脸、发型和服装。\n写实，Kodak Vision3 250D 胶片颗粒，台灯在画右，暖光照脸。\n他在画左，坐在椅子上。中景，50mm 等效，浅景深，机位固定。\n主要动作：他翻页。\n0-3秒：他用右手翻一页稿子。\n3-5.17秒：他抬眼看门口。\n声音：纸页轻响，房间底噪。", roleIds: ["roleA"], sceneAssetIds: ["office"], seconds: 5, aspect: "9:16", soundMode: "ambient" },
+  { title: "L02｜李四开口", prompt: "主要动作：李四说话。\n0-3秒：李四开口。\n声音：底噪。没有背景音乐。", roleIds: ["roleB"], sceneAssetIds: [], seconds: 6, aspect: "9:16", soundMode: "av", dialogue: [{ roleId: "roleB", text: "好。" }] },
 ] }] };
 const report = queueCardReport(queue, roles, assets);
 assert.equal(report.shots.length, 2);

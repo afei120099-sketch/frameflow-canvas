@@ -1,7 +1,10 @@
 // Isolated browser data and smoke server only. Never submit a GPU job.
 import assert from "node:assert/strict";
+import { browserTestFixtures } from './browser-test-fixtures.mjs';
 import { pathToFileURL } from "node:url";
 const [playwrightEntry, executablePath, baseUrl = "http://127.0.0.1:5180/"] = process.argv.slice(2);
+if (!process.argv[2] || !executablePath) throw new Error("Provide Playwright module path and browser executable, plus an isolated smoke server URL");
+const fixtures = browserTestFixtures();
 const { chromium } = await import(pathToFileURL(playwrightEntry).href);
 const browser = await chromium.launch({ executablePath, headless: true });
 const context = await browser.newContext({ viewport: { width: 1800, height: 1600 } });
@@ -75,8 +78,8 @@ try {
   await picker.waitFor({ state: "hidden" });
   await card(1).getByAltText("first.png").waitFor();
   assert.equal(await page.locator('.tl-shape[data-shape-type="arrow"]').count(), 4, "picker replacement removes stale source arrow");
-  await page.screenshot({ path: ".claude/storyboard-five-slots.png" });
+  await page.screenshot({ path: fixtures.screenshot('storyboard-five-slots.png') });
   assert.deepEqual(errors, []);
   console.log("PASS: fixed five equal-height slots, all four direct bindings, automatic tail, no per-picture time/end controls, prompt, remove/undo and refresh; no GPU");
-} catch (cause) { await page.screenshot({ path: ".claude/storyboard-five-failure.png" }); throw cause; }
-finally { await browser.close(); }
+} catch (cause) { await page.screenshot({ path: fixtures.screenshot('storyboard-five-failure.png') }); throw cause; }
+finally { await browser.close(); fixtures.cleanup(); }

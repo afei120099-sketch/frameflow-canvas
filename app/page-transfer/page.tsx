@@ -82,7 +82,7 @@ export default function PageTransfer() {
   };
   return <main style={{ maxWidth: 760, margin: "40px auto", fontFamily: "sans-serif", lineHeight: 1.5 }}>
     <h1>导出各页到新画布</h1>
-    <p>仙侠和尾帧高清队列留在这个画布。Page 1、新画布、页面 1、页面 2 各复制一份工程包。这里不删除原页面，也不刷新正在用的画布标签。</p>
+    <p>按页面拆分配置复制工程包；未配置时仅导出完整备份。原页面和正在使用的画布标签保持不变。</p>
     <button type="button" disabled={busy} onClick={() => void run()} style={{ fontSize: 16, padding: "8px 14px" }}>{busy ? "正在导出…" : "导出各页到新画布"}</button>
     <ul>{lines.map((line, index) => <li key={`${index}-${line.slice(0, 24)}`}>{line}</li>)}</ul>
   </main>;

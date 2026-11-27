@@ -6,7 +6,8 @@ import { promises as fs } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-// Optional external prompt-rules toolkit (SKILL_h3-video.md / h3q.py / 源文件/vocab.json); not shipped with this repo.
+// Bundled prompt-rules toolkit; FRAMEFLOW_H3_TOOLS may select another installation.
+// 源文件/vocab.json is an optional user vocabulary.
 export const H3_TOOLS = process.env.FRAMEFLOW_H3_TOOLS || path.resolve('h3-tools');
 const SKILL = () => path.join(H3_TOOLS, 'SKILL_h3-video.md');
 const H3Q = () => path.join(H3_TOOLS, 'h3q.py');
@@ -28,7 +29,10 @@ export async function readVocab(file = VOCAB()) {
   try {
     const [text, st] = await Promise.all([fs.readFile(file, 'utf8'), fs.stat(file)]);
     return { ok: true, file, mtime: st.mtimeMs, vocab: JSON.parse(text) };
-  } catch (error) { return { ok: false, file, error: error.code === 'ENOENT' ? `词库不在 ${file}` : `词库读不了：${error.message}` }; }
+  } catch (error) {
+    if (error.code === 'ENOENT') return { ok: true, file, mtime: 0, vocab: {} };
+    return { ok: false, file, error: `词库读不了：${error.message}` };
+  }
 }
 
 function run(cmd, args, { timeout = 30000, cwd } = {}) {

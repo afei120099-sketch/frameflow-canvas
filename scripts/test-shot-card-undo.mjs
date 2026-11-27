@@ -27,7 +27,7 @@ field = countFieldInput(countFieldInput(field, "historyUndo"), "insertText");
 assert.equal(field.undone, 0, "撤了以后又打字：恢复链断开，和编辑器一样");
 
 // ── 3. 撤销提示 ──
-assert.equal(shotCode("EP02-std-L03｜抬头等她过来"), "L03");
+assert.equal(shotCode("DEMO-std-L03｜示例镜头A"), "L03");
 const shot = (title, extra = {}) => ({ title, prompt: `主要动作：${title}\n对白（中文普通话，口型同步）：张三：“好。”`, roleIds: ["a"], sceneAssetIds: ["s"], seconds: 10, aspect: "9:16", soundMode: "av", generationMode: "auto", dialogue: [], ...extra });
 const q = (shots, extra = {}) => ({ version: "shot-queue-v1", title: "测试", defaults: { noBackgroundMusic: true }, chapters: [{ title: "一", shots }], ...extra });
 const A = shot("EP-L01｜一"), B = shot("EP-L02｜二"), C = shot("EP-L03｜三");

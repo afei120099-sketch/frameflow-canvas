@@ -1,7 +1,10 @@
 // Disposable browser data on the isolated smoke server. Never submit a GPU job.
 import assert from "node:assert/strict";
+import { browserTestFixtures } from './browser-test-fixtures.mjs';
 import { pathToFileURL } from "node:url";
 const [entry, executablePath, baseUrl="http://127.0.0.1:5180/"] = process.argv.slice(2);
+if (!process.argv[2] || !executablePath) throw new Error("Provide Playwright module path and browser executable, plus an isolated smoke server URL");
+const fixtures = browserTestFixtures();
 const { chromium } = await import(pathToFileURL(entry).href);
 const browser = await chromium.launch({ executablePath, headless:true });
 const page = await browser.newPage({ viewport:{width:1600,height:1000} });
@@ -40,7 +43,7 @@ try {
   const picker=page.getByRole("dialog",{name:"选择首帧图片"});
   const chooser=page.waitForEvent("filechooser");
   await picker.getByRole("button",{name:"上传新图片",exact:true}).click();
-  await (await chooser).setFiles(".claude/artifacts/v1-final/first.png");
+  await (await chooser).setFiles(fixtures.image);
   await picker.waitFor({state:"hidden"});
   await h3.locator(".h3-preview").click();
   await dock.getByAltText("连接的首帧").waitFor();
@@ -56,12 +59,12 @@ try {
   const bounds=await dock.boundingBox();
   assert(bounds.height < 500,"composer remains compact with a portrait preview");
   await dock.getByRole("button",{name:"展开图片预览"}).click();
-  await page.screenshot({path:".claude/creative-dock-browser.png"});
+  await page.screenshot({path:fixtures.screenshot('creative-dock-browser.png')});
   await dock.getByRole("button",{name:"多参考",exact:true}).click();
   await dock.getByAltText("第一参考图").waitFor();
   const referenceChooser=page.waitForEvent("filechooser");
   await dock.getByRole("button",{name:"+ 参考图",exact:true}).click();
-  await (await referenceChooser).setFiles(".claude/artifacts/v1-final/first.png");
+  await (await referenceChooser).setFiles(fixtures.image);
   await dock.locator(".creative-reference-strip .reference-item").waitFor();
   await page.waitForFunction(()=>document.querySelector('.h3-inline-composer [data-task-mode]')?.getAttribute('data-task-mode') === 'ref2va');
   await dock.getByRole("button",{name:/声音 \/ 视频 \/ 角色/}).click();
@@ -71,7 +74,7 @@ try {
   const settingsBounds=await settings.boundingBox();
   assert(settingsBounds.y>=0 && settingsBounds.y+settingsBounds.height<=1000);
   assert.equal(await settings.locator('.h3-settings-body').evaluate(el=>getComputedStyle(el).overflowY),"auto");
-  await page.screenshot({path:".claude/creative-parameters-browser.png"});
+  await page.screenshot({path:fixtures.screenshot('creative-parameters-browser.png')});
   await settings.getByRole("button",{name:"关闭视频参数"}).click();
   await page.mouse.click(1500,100);
   assert.equal(await dock.isVisible(),true,"preview and controls remain one card after deselection");
@@ -91,5 +94,5 @@ try {
   assert.equal(await page.locator(".workflow-curve").count(),2,"normal image-to-H3 path remains bound");
   assert.deepEqual(errors,[]);
   console.log("PASS: integrated node preview/composer, compact five slots, settings popup, prompt/duration, multi-reference view, upload, curves, non-destructive view switching, picture expand/collapse and hover +/-; no GPU");
-} catch(e) { console.error(errors); await page.screenshot({path:".claude/creative-dock-failure.png"}); throw e; }
-finally { await browser.close(); }
+} catch(e) { console.error(errors); await page.screenshot({path:fixtures.screenshot('creative-dock-failure.png')}); throw e; }
+finally { await browser.close(); fixtures.cleanup(); }

@@ -18,7 +18,7 @@ const many = planQueuePrimaries(queue([{ roleIds: ["a"] }]), [role("a", ["x", "y
 assert.deepEqual(many.set, []);
 assert.match(many.error, /角色「A」有 3 张外观图，还没选主外观/);
 // 李四那张图在列表里也一样不会被特殊对待
-const lisi = planQueuePrimaries(queue([{ roleIds: ["lw"] }]), [role("lw", ["other", "5bdf89b5-cece-4777-8443-e64bf6b3302c"])]);
+const lisi = planQueuePrimaries(queue([{ roleIds: ["roleB"] }]), [role("roleB", ["other", "00000000-0000-4000-8000-000000000015"])]);
 assert.deepEqual(lisi.set, []); assert.ok(lisi.error);
 // 没有外观图 / 角色不存在：照旧报错
 assert.match(planQueuePrimaries(queue([{ roleIds: ["a"] }]), [role("a", [])]).error, /没有外观图/);
@@ -32,7 +32,7 @@ assert.deepEqual(planQueuePrimaries(queue([{ roleIds: ["a", "b"] }]), [role("a",
 // 源码：通用代码里不再有写死的素材 ID
 const root = path.resolve(import.meta.dirname, "..");
 const panel = readFileSync(path.join(root, "components/shot-queue-panel.tsx"), "utf8");
-assert.doesNotMatch(panel, /5bdf89b5|LIN_WAN/);
+assert.doesNotMatch(panel, /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
 assert.doesNotMatch(panel, /appearanceAssetIds\[0\]/, "不再悄悄取第一张");
 assert.match(panel, /planQueuePrimaries\(parsed, await listRoles\(\)\)/);
 

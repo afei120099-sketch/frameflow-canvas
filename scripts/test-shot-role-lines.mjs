@@ -22,7 +22,7 @@ const BODY = [
 ].join("\n");
 
 // ── 1. 按角色读写正文对白行：插在画面要求前；改一个角色只动他的句子；其余正文一字不动 ──
-const base = { title: "EP03-05", prompt: BODY, roleIds: ["zy", "lw"], sceneAssetIds: [], seconds: 10, aspect: "9:16", soundMode: "av" };
+const base = { title: "EP03-05", prompt: BODY, roleIds: ["roleA", "roleB"], sceneAssetIds: [], seconds: 10, aspect: "9:16", soundMode: "av" };
 let step = setRoleLines(base, "李四", ["这份报价，你自己看过吗？", "  ", "第二句 "]);
 let shot = step.shot;
 assert.equal(shot.prompt, BODY.replace("\n画面要求", `\n${DIALOGUE_ROW_LABEL}李四：“这份报价，你自己看过吗？” 李四：“第二句”\n画面要求`));
@@ -53,7 +53,7 @@ assert.deepEqual(roleLines(queue.chapters[0].shots[0], "李四"), ["你自己看
 assert.deepEqual(roleLines(queue.chapters[0].shots[0], "张三"), []);
 
 // ── 3. 从 JSON 导入台词：写进对白行，不写 dialogue；对不上的列出来；先预览再写 ──
-const roles = [{ roleId: "zy", displayName: "张三" }, { roleId: "lw", displayName: "李四" }];
+const roles = [{ roleId: "roleA", displayName: "张三" }, { roleId: "roleB", displayName: "李四" }];
 const mapPlan = planDialogueImport(JSON.stringify({ "EP03-05": { "李四": ["新的一句", "第二句"], "张三": "哪儿不对？" }, "EP03-06": { "李四": ["嗯。"], "钱总": ["我是谁"] }, "EP09-01": { "李四": ["不存在的镜头"] } }), queue, roles);
 assert.ok(!("error" in mapPlan));
 assert.deepEqual(mapPlan.changes.map((c) => [c.shotTitle, c.roleName, c.lines.length, c.replaced]), [["EP03-05", "李四", 2, 1], ["EP03-05", "张三", 1, 0], ["EP03-06", "李四", 1, 0]]);
@@ -77,32 +77,32 @@ assert.equal(stepVersion(history, -1).text, before, "撤销 = 回到导入前");
 // 整份队列：按正本写的读对白行；旧队列读 dialogue（roleId 或 speaker 名字）
 const fromRow = planDialogueImport(JSON.stringify({ chapters: [{ shots: [{ title: "EP03-06", prompt: `${DIALOGUE_ROW_LABEL}张三：“走吧。” 李四：“好。”`, dialogue: [] }] }] }), queue, roles);
 assert.deepEqual(fromRow.changes.map((c) => [c.roleName, c.lines]), [["张三", ["走吧。"]], ["李四", ["好。"]]]);
-const fromField = planDialogueImport(JSON.stringify({ chapters: [{ shots: [{ title: "EP03-06", dialogue: [{ roleId: "zy", text: "走吧。" }, { speaker: "李四", text: "好。" }, { text: "没写谁" }, { roleId: "ghost", text: "鬼" }] }] }] }), queue, roles);
+const fromField = planDialogueImport(JSON.stringify({ chapters: [{ shots: [{ title: "EP03-06", dialogue: [{ roleId: "roleA", text: "走吧。" }, { speaker: "李四", text: "好。" }, { text: "没写谁" }, { roleId: "ghost", text: "鬼" }] }] }] }), queue, roles);
 assert.deepEqual(fromField.changes.map((c) => [c.roleName, c.lines]), [["张三", ["走吧。"]], ["李四", ["好。"]]]);
 assert.equal(fromField.unmatched.length, 2);
 assert.match(planDialogueImport("{ broken", queue, roles).error, /不是合法 JSON/);
 
 // ── 4. 提交的正文：对白行原样提交，不追加人名、声音录音、元指令、嘴唇句 ──
 const asset = (assetId, kind, filename) => ({ assetId, kind, storageReference: `${kind}:${assetId}`, filename });
-const roleAssets = { zyFace: asset("zyFace", "image", "张三.png"), lwFace: asset("lwFace", "image", "李四.png"), lwVoice: asset("lwVoice", "audio", "李四.wav"), zyVoice: asset("zyVoice", "audio", "张三.wav") };
-const zy = { roleId: "zy", displayName: "张三", description: "", appearanceAssetIds: ["zyFace"], voiceAssetIds: ["zyVoice"], primaryAppearanceAssetId: "zyFace", primaryVoiceAssetId: "zyVoice" };
-const lw = { roleId: "lw", displayName: "李四", description: "", appearanceAssetIds: ["lwFace"], voiceAssetIds: ["lwVoice"], primaryAppearanceAssetId: "lwFace", primaryVoiceAssetId: "lwVoice" };
-const compile = (prompt, noBackgroundMusic, dialogue = []) => prepareH3ReferenceSubmission({ images: [], videos: [], audios: [], roles: [zy, lw], roleAssets, dialogue, soundMode: "av" }, { noBackgroundMusic, prompt, promptMode: "plain", community: false }).compiled.prompt;
-const withLines = setRoleLines(base, "李四", ["这份报价，你自己看过吗？"]).shot.prompt;
+const roleAssets = { roleAFace: asset("roleAFace", "image", "张三.png"), roleBFace: asset("roleBFace", "image", "李四.png"), roleBVoice: asset("roleBVoice", "audio", "李四.wav"), roleAVoice: asset("roleAVoice", "audio", "张三.wav") };
+const roleA = { roleId: "roleA", displayName: "张三", description: "", appearanceAssetIds: ["roleAFace"], voiceAssetIds: ["roleAVoice"], primaryAppearanceAssetId: "roleAFace", primaryVoiceAssetId: "roleAVoice" };
+const roleB = { roleId: "roleB", displayName: "李四", description: "", appearanceAssetIds: ["roleBFace"], voiceAssetIds: ["roleBVoice"], primaryAppearanceAssetId: "roleBFace", primaryVoiceAssetId: "roleBVoice" };
+const compile = (prompt, noBackgroundMusic, dialogue = []) => prepareH3ReferenceSubmission({ images: [], videos: [], audios: [], roles: [roleA, roleB], roleAssets, dialogue, soundMode: "av" }, { noBackgroundMusic, prompt, promptMode: "plain", community: false }).compiled.prompt;
+const withRoleBes = setRoleLines(base, "李四", ["这份报价，你自己看过吗？"]).shot.prompt;
 // 没勾禁背景乐：逐字一致
-assert.equal(compile(withLines, false), withLines);
+assert.equal(compile(withRoleBes, false), withRoleBes);
 // 勾了禁背景乐：只多每段一句「这段听到的」和结尾一句正向的可听声音句；去掉它们就是原文
-const bgm = compile(withLines, true);
+const bgm = compile(withRoleBes, true);
 const strip = (text) => text.replace(/这段听到的：[^。]*。/g, "").replace(/\n\nAudible audio is [^\n]*$/, "");
-assert.equal(strip(bgm), withLines);
+assert.equal(strip(bgm), withRoleBes);
 assert.match(bgm, /3-7秒：她低头看文件，抬眼说话。这段听到的：房间底噪、这段的对白和动作的声响。/);
 assert.match(bgm, /0-3秒：[^\n]*。这段听到的：房间底噪和这段动作的声响。/);
-for (const text of [compile(withLines, false), bgm]) {
+for (const text of [compile(withRoleBes, false), bgm]) {
   assert.doesNotMatch(text, /Role appearance|voice-timbre|Spoken dialogue|numbered|complete speech|lips closed|keeps the lips|\(李四|\(张三|开口|不出声|嘴唇闭着|background music|配乐/i, text);
   assert.equal(text.split("这份报价，你自己看过吗？").length - 1, 1, "台词只出现一次");
 }
 // 旧队列 dialogue 非空：仍按旧办法追加（卡片标红并给一键按钮），但不再加元指令和嘴唇句
-const legacy = compile(BODY, true, [{ roleId: "lw", text: "看过吗？" }]);
+const legacy = compile(BODY, true, [{ roleId: "roleB", text: "看过吗？" }]);
 assert.match(legacy, /Spoken dialogue, in playback order:\n1\. <Subject 2> \(李四, S1\)/);
 assert.doesNotMatch(legacy, /complete speech|numbered lines are|keeps the lips closed|的第 \d+ 句台词/);
 

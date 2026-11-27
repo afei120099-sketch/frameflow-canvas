@@ -1,3 +1,9 @@
+目前只完整支持 Windows（macOS/Linux 暂不支持部分本地辅助功能）。
+
+Required Notice: Copyright (c) 2026 小木
+
+可选配置见 `.env.example`。Telegram 桥接默认关闭，启用需设置 `NEXT_PUBLIC_FRAMEFLOW_TELEGRAM_BRIDGE=1` 并另行运行伴随服务。页面拆分默认关闭，可通过 `NEXT_PUBLIC_FRAMEFLOW_SPLIT_PAGES` 配置页面名称和实例端口；修改后重启开发服务或重新构建。使用多实例启动脚本时，也需在当前 PowerShell 环境中设置相同的配置值。
+
 # Frameflow Canvas
 
 **English** · [中文](#中文说明)

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { MACHINE_SYNTAX } from "../lib/autopilot-director.ts";
 
 /**
- * Director Runtime Skill: the planning rules condensed from 《AI视频导演 SKILL 2.0》 (config/director-runtime-skill.md).
+ * Director Runtime Skill: the Frameflow planning rules (config/director-runtime-skill.md).
  * It is injected, as plain text, at the top of every director's system prompt — the same text for every provider.
  * Version (front matter) and a SHA-256 of the injected body are recorded with each job, so rule changes are traceable.
  *

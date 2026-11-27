@@ -7,9 +7,9 @@ const load = (tag) => import(`../lib/director-stage/store.ts?${tag}`);
 const store = await load("first");
 
 // 1. Create a Scene.
-const scene = await store.createScene({ name: "《这一笔》书房" });
+const scene = await store.createScene({ name: "《示例项目》书房" });
 assert.equal(scene.schemaVersion, 1);
-assert.equal(scene.name, "《这一笔》书房");
+assert.equal(scene.name, "《示例项目》书房");
 assert.ok(scene.id && scene.createdAt > 0 && scene.updatedAt === scene.createdAt);
 await assert.rejects(store.createScene({ name: "   " }), /场景数据不合法/);
 await assert.rejects(store.createScene({ name: "x", extra: 1 }), /场景数据不合法/);

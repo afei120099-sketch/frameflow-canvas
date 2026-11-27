@@ -17,5 +17,5 @@ function check(install){
 check(window=>runInNewContext(RESIZE_NOTICE_GUARD_SCRIPT,{window}));
 check(window=>{globalThis.window=window;installResizeNoticeGuard();delete globalThis.window;});
 const layout=readFileSync(new URL('../app/layout.tsx',import.meta.url),'utf8');
-assert.ok(layout.indexOf('__html:RESIZE_NOTICE_GUARD_SCRIPT')<layout.indexOf('__ffSend'),'installed before existing error reporting');
+assert.ok(layout.includes('__html:RESIZE_NOTICE_GUARD_SCRIPT'),'guard script installed in layout');assert.ok(!/8791|__ffSend/.test(layout),'no private debug beacon');
 console.log('PASS early/late precise ResizeObserver notice suppression, deduplicated, other JS/errors preserved');

@@ -22,7 +22,7 @@ import { promptTagErrors } from "../lib/shot-prompt-checks.ts";
 import { runH3qCheck, H3_TOOLS } from "./zhengben-helper.mjs";
 
 const fixture = (name) => JSON.parse(readFileSync(new URL(`./fixtures/official-format/${name}`, import.meta.url), "utf8"));
-const NAMES = { "99e67465-7b1e-494b-befa-53a85534a365": "张三", "c68aa343-fccb-4877-a776-2fc30bef7df0": "李四", "f7e3b45b-8987-48ca-816a-273f99224ec4": "王五" };
+const NAMES = { "00000000-0000-4000-8000-00000000000a": "张三", "00000000-0000-4000-8000-00000000000b": "李四", "00000000-0000-4000-8000-00000000000e": "王五" };
 function world(queue) {
   const shots = queue.chapters.flatMap((c) => c.shots);
   const roleIds = [...new Set(shots.flatMap((s) => s.roleIds))], sceneIds = [...new Set(shots.flatMap((s) => s.sceneAssetIds))];

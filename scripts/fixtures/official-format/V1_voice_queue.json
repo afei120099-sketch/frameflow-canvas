@@ -14,12 +14,12 @@
       "shots": [
         {
           "roleIds": [
-            "99e67465-7b1e-494b-befa-53a85534a365",
-            "c68aa343-fccb-4877-a776-2fc30bef7df0",
-            "f7e3b45b-8987-48ca-816a-273f99224ec4"
+            "00000000-0000-4000-8000-00000000000a",
+            "00000000-0000-4000-8000-00000000000b",
+            "00000000-0000-4000-8000-00000000000e"
           ],
           "sceneAssetIds": [
-            "cbbb4a19-0bcc-4374-a834-73defd176bf7"
+            "00000000-0000-4000-8000-00000000000f"
           ],
           "seconds": 9,
           "aspect": "9:16",
@@ -29,8 +29,8 @@
           "title": "又绕回原样了-官方格式-V1-送声音",
           "prompt": "subject_definitions:\n<Subject 1> is the daytime boardroom in <Picture 1>: a long dark conference table with black leather chairs, floor-to-ceiling windows with a hazy city skyline, and soft overcast daylight. In the target video a wall-mounted projection screen at the far end of the table shows a line chart.\n<Subject 2> is Zhang San from <Picture 2>, a man in his early thirties with short black hair, wearing a dark suit jacket over a buttoned light-blue shirt.\n<Subject 3> is Li Si from <Picture 3>, a woman in her mid-twenties with dark hair, wearing a buttoned white cotton shirt, a dark suit jacket, and dark trousers, holding a red pen in her right hand.\n<Subject 4> is Wang Wu from <Picture 4>, a man in his fifties with short grey-black hair, wearing a dark grey suit and a white shirt, with a metal watch on his left wrist.\n<Audio 1> is the voice-timbre reference for <Subject 4> (S1).\n<Audio 2> is the voice-timbre reference for <Subject 2> (S2).\n\nsummary:\n[reference generation + audio reference] In the boardroom of <Subject 1>, <Subject 4> checks his watch and asks one short question, <Subject 2> answers with the version number in one short reply, and then all three, including <Subject 3>, settle into silence looking at the line chart on the projection screen. <Audio 1> and <Audio 2> are the voice-timbre references for <Subject 4> and <Subject 2>.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 2], [Shot 3]): fully_preserved - the room layout, furniture, windows, and daylight are retained.\n<Subject 2> (appears in [Shot 2], [Shot 3]): fully_preserved - his face, hairstyle, and clothing are retained.\n<Subject 3> (appears in [Shot 3]): fully_preserved - her face, hairstyle, clothing, and red pen are retained.\n<Subject 4> (appears in [Shot 1], [Shot 3]): fully_preserved - his face, hairstyle, suit, and metal watch are retained.\n<Audio 1>: reference - its vocal timbre guides the dialogue delivery of <Subject 4> without copying the original signal.\n<Audio 2>: reference - its vocal timbre guides the dialogue delivery of <Subject 2> without copying the original signal.\n\ndetailed_description:\nThe target video is live-action and realistic, with Kodak Vision3 250D film grain, natural skin texture with visible pores, crisp fabric folds, soft daylight, and a fixed camera in every shot with a 35mm-equivalent lens and shallow depth of field.\n[Shot 1] A close-up at eye level, three-quarter view, frames <Subject 4> seated at the head of the long table in the boardroom of <Subject 1>. He frowns and turns his left wrist to look at the metal watch, taps the watch face once with his right index finger, then lifts his eyes. <Subject 4>, a man in his fifties with a low, slightly rough voice (S1), using the voice timbre referenced from <Audio 1>, asks under his breath: <d>[Chinese] 又绕回原样了？</d> He closes his mouth and keeps his eyes raised.\n[Shot 2] At 00:04.000, the shot cuts to a close-up of <Subject 2>, seated in the chair nearest to him on the left side of the table, his face three-quarter to the camera, eyes on the line chart on the projection screen. <Subject 2>, a man in his early thirties with a calm, flat mid-range voice (S2), using the voice timbre referenced from <Audio 2>, replies evenly: <d>[Chinese] v3。</d> He closes his mouth and keeps looking at the chart.\n[Shot 3] At 00:07.000, the shot cuts to a medium shot of all three: <Subject 4> seated at the head of the long table, <Subject 2> seated in the chair nearest to him on the left side of the table, and <Subject 3> standing on the right near the screen. All three keep their eyes on the line chart on the projection screen with their lips closed. <Subject 3> lowers the tip of the red pen in her right hand. The final frame holds on the three of them looking at the chart, with the chart in the center of the frame.\n\noverall_soundscape:\nQuiet boardroom room tone with a low air-conditioning hum continues throughout the video, with a single light fingertip tap on a metal watch face in Shot 1.\n\nnon_diegetic_music:\nN/A",
           "voiceRoleIds": [
-            "f7e3b45b-8987-48ca-816a-273f99224ec4",
-            "99e67465-7b1e-494b-befa-53a85534a365"
+            "00000000-0000-4000-8000-00000000000e",
+            "00000000-0000-4000-8000-00000000000a"
           ]
         }
       ]

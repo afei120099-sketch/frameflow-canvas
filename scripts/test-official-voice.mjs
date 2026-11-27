@@ -13,8 +13,8 @@ import { hardRuleById } from "../lib/hard-rules.ts";
 import { VOICE_SAMPLE_SECONDS } from "../lib/voice-roles.ts";
 
 const fixture = (name) => JSON.parse(readFileSync(new URL(`./fixtures/official-format/${name}`, import.meta.url), "utf8"));
-const SONG = "f7e3b45b-8987-48ca-816a-273f99224ec4", ZHOU = "99e67465-7b1e-494b-befa-53a85534a365", LIN = "c68aa343-fccb-4877-a776-2fc30bef7df0";
-const NAMES = { [SONG]: "王五", [ZHOU]: "张三", [LIN]: "李四" };
+const ROLE_C = "00000000-0000-4000-8000-00000000000e", ROLE_A = "00000000-0000-4000-8000-00000000000a", ROLE_B = "00000000-0000-4000-8000-00000000000b";
+const NAMES = { [ROLE_C]: "王五", [ROLE_A]: "张三", [ROLE_B]: "李四" };
 function world(queue, { noVoice = [], seconds = {} } = {}) {
   const shots = queue.chapters.flatMap((c) => c.shots);
   const roleIds = [...new Set(shots.flatMap((s) => s.roleIds))], sceneIds = [...new Set(shots.flatMap((s) => s.sceneAssetIds))];
@@ -35,7 +35,7 @@ for (const nbm of [false, true]) {
   assert.equal(prepared.compiled.prompt, v1.prompt, `nbm=${nbm}：提交正文和原文逐字一致`);
   assert.deepEqual(prepared.manifest.audioRefs.map((ref) => [ref.label, ref.filename]), [["<Audio 1>", "王五.wav"], ["<Audio 2>", "张三.wav"]], "两条声音，顺序照 voiceRoleIds");
   assert.deepEqual(prepared.payload.audios.map((a) => a.filename), ["王五.wav", "张三.wav"], "提交顺序 ref_audio_0 = 王五、ref_audio_1 = 张三");
-  assert.deepEqual(prepared.manifest.voiceRoleIds, [SONG, ZHOU], "manifest 记下 voiceRoleIds（提交时据此截前 8 秒）");
+  assert.deepEqual(prepared.manifest.voiceRoleIds, [ROLE_C, ROLE_A], "manifest 记下 voiceRoleIds（提交时据此截前 8 秒）");
   assert.ok(prepared.compiled.notes.some((n) => n.includes("送了 2 条角色声音")), JSON.stringify(prepared.compiled.notes));
 }
 // 截前 8 秒：节点提交时 manifest 有 voiceRoleIds 就加 referenceAudioTrimSeconds（沿用旧格式声音路的 TrimAudioDuration）。
@@ -43,7 +43,7 @@ assert.equal(VOICE_SAMPLE_SECONDS, 8);
 assert.match(readFileSync(new URL("../app/canvas-workspace.tsx", import.meta.url), "utf8"), /manifest\.voiceRoleIds\?\.length \? \{ \.\.\.settings, referenceAudioTrimSeconds: VOICE_SAMPLE_SECONDS \}/);
 // 节点自己点生成：说话角色策略照样交出 voiceRoleIds，不自动选角色。
 { const policy = resolveH3Speaker({ prompt: v1.prompt, roleIds: v1.roleIds, voiceRoleIds: v1.voiceRoleIds, dialogue: [], autoVoiceEnabled: true, soundMode: "av" });
-  assert.deepEqual([policy.official, policy.disabled, policy.voiceRoleId, policy.voiceRoleIds, policy.errors], [true, false, undefined, [SONG, ZHOU], []]); }
+  assert.deepEqual([policy.official, policy.disabled, policy.voiceRoleId, policy.voiceRoleIds, policy.errors], [true, false, undefined, [ROLE_C, ROLE_A], []]); }
 // 卡片：0 拦、0 红。
 assert.deepEqual(shotGate(v1), [], "画布判定不拦");
 assert.deepEqual(shotGate(v1, [], []), [], "h3q 判定（没报）也不拦");
@@ -58,9 +58,9 @@ assert.deepEqual(shotCardChecks(v1, V1, w.roles, w.assets).filter((c) => c.level
 
 // ── 3. 对不上就拦，说人话、写改法 ──
 const cases = [
-  [{ ...v1, voiceRoleIds: [SONG] }, /voiceRoleIds 写了 1 个人，正文里写的是 <Audio 1>、<Audio 2>/],
+  [{ ...v1, voiceRoleIds: [ROLE_C] }, /voiceRoleIds 写了 1 个人，正文里写的是 <Audio 1>、<Audio 2>/],
   [{ ...v1, voiceRoleIds: undefined }, /正文写了 <Audio 1>、<Audio 2>，但这一镜没写 voiceRoleIds/],
-  [{ ...o1, voiceRoleIds: [SONG, ZHOU] }, /voiceRoleIds 写了 2 个人，正文里一个 <Audio N> 都没写/],
+  [{ ...o1, voiceRoleIds: [ROLE_C, ROLE_A] }, /voiceRoleIds 写了 2 个人，正文里一个 <Audio N> 都没写/],
   [{ ...v1, prompt: v1.prompt.replaceAll("<Audio 2>", "<Audio 3>") }, /正文里写的是 <Audio 1>、<Audio 3>/],
 ];
 for (const [shot, re] of cases) {
@@ -75,16 +75,16 @@ for (const [shot, re] of cases) {
   const items = shotGate(cases[0][0], [], [{ level: "ERROR", where: "", message: `${rule.prefix} 正本的说法` }]);
   assert.deepEqual(items.map((i) => [i.id, i.source]), [[OFFICIAL_VOICE_ID, "h3q"]]); }
 // 整批入队也拦。
-assert.equal(queueGate(parseShotQueue(JSON.stringify({ ...V1, chapters: [{ ...V1.chapters[0], shots: [{ ...v1, voiceRoleIds: [SONG] }] }] }))).ok, false);
+assert.equal(queueGate(parseShotQueue(JSON.stringify({ ...V1, chapters: [{ ...V1.chapters[0], shots: [{ ...v1, voiceRoleIds: [ROLE_C] }] }] }))).ok, false);
 // 旧格式不管（旧格式的 voiceRoleIds 有自己的规则）。
-assert.equal(officialVoiceProblem("参考说明：<Picture 1>是办公室。<Audio 1>是张三的声音", [ZHOU, SONG]), null);
+assert.equal(officialVoiceProblem("参考说明：<Picture 1>是办公室。<Audio 1>是张三的声音", [ROLE_A, ROLE_C]), null);
 
 // ── 4. 每人要有主声音（没有提交会失败）；样本超过 15 秒提醒 ──
-{ const ww = world(V1, { noVoice: [ZHOU] });
+{ const ww = world(V1, { noVoice: [ROLE_A] });
   const checks = shotCardChecks(v1, V1, ww.roles, ww.assets);
   assert.ok(checks.some((c) => c.level === "error" && c.code === "voice_role_no_voice" && c.message.includes("张三")), JSON.stringify(checks));
   assert.throws(() => submit(v1, ww), /主声音|声音/, "提交时也过不去"); }
-{ const ww = world(V1, { seconds: { [SONG]: 41 } });
+{ const ww = world(V1, { seconds: { [ROLE_C]: 41 } });
   const checks = shotCardChecks(v1, V1, ww.roles, ww.assets);
   assert.ok(checks.some((c) => c.level === "warn" && c.code === "voice_sample_long" && c.message.includes("王五")), JSON.stringify(checks)); }
 

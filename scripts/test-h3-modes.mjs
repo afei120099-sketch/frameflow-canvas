@@ -123,7 +123,7 @@ assert.deepEqual(codes(runH3Preflight(base({ mode: "hybrid" }))), ["mode_disable
   assert.equal(await fileHash("h3-workflow.json"), "53131f30550f78d686762033432606bee5a7a0ecc0b7820d99e3b82d1f8dc195", "frozen FL2VA template file untouched");
   assert.equal(await fileHash("h3-reference-workflow.json"), "c64c1e9aa9a5d109d3b250a0c43595dd9f84c360f32591409264a383bfb4d3c7", "frozen Ref2VA template file untouched");
   assert.equal(await fileHash("seedvr2-workflow.json"), "a12936a5d2bedb4dadf4b6ee256e7a670eb12c317c7075e741c07d7d76e0d39e");
-  assert.equal(await fileHash("film-workflow.json"), "e4c622e0cc654e5be54b62645797ea374c6a66af488b679b0fd9fa72863d9599");
+  assert.equal(await fileHash("film-workflow.json"), "965b3e9175544e9fa2313b534b9398b749af8976013a8512333ff5c1d6087513");
   // Retired 2026-11-10: the stable I2VA / FL2VA / Ref2VA submissions are all refused; the frozen builders above stay for history.
   const noRefs = { images: [], videos: [], audios: [] };
   assert.throws(() => planH3Submission({ prompt: "P", seed: 7, settings, taskMode: "i2va" }, { imageName: "first.png", references: noRefs }), /已停用/);

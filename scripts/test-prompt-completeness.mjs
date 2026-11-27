@@ -31,7 +31,7 @@ const L03 = [
   "对白（中文普通话，口型同步）：张三：“这张表算错了。过来，我指给你看。” 李四：“等等啊。我这一页还没改完呢，你先坐。”",
   "画面要求：竖屏9:16，一条镜头拍完，中间不切换；人物脸型、发型与参考图严格一致，手指数量正常、手部不变形，口型与台词同步；画面中除场景本身的文件、屏幕文字外，没有字幕、水印或文字叠加；保持真实质感，皮肤不过度磨皮，没有卡通或CG塑料感，前景没有额外人物闯入，画面稳定不闪烁。参考图里已有的标志、招牌、商标保持原样。",
 ].join("\n");
-const shot = { title: "EP02-L03｜抬头等她过来", roleIds: ["zy", "lw"], sceneAssetIds: ["office"], seconds: 14, aspect: "9:16", soundMode: "av", prompt: L03 };
+const shot = { title: "S01｜示例镜头A", roleIds: ["roleA", "roleB"], sceneAssetIds: ["office"], seconds: 14, aspect: "9:16", soundMode: "av", prompt: L03 };
 const ctx = { visibleNames: ["张三", "李四"], roleNames: ["张三", "李四"] };
 const result = Object.fromEntries(shotCompleteness(shot, ctx).map((r) => [r.id, r]));
 assert.equal(Object.keys(result).length, PROMPT_CATEGORIES.length);
@@ -46,7 +46,7 @@ assert.equal(stateOf("blocking"), "missing"); assert.match(result.blocking.note,
 assert.equal(stateOf("face"), "missing"); assert.match(result.face.note, /3-8秒/);
 assert.equal(stateOf("dialogue"), "ok"); assert.match(result.dialogue.note, /提示：张三、李四 可以加语气/);
 // 台词放进 dialogue 字段、正文没有对白行 → 漏写。
-const fieldOnly = Object.fromEntries(shotCompleteness({ ...shot, prompt: L03.replace(/\n对白[^\n]*/, ""), dialogue: [{ roleId: "zy", text: "这张表算错了。" }] }, ctx).map((r) => [r.id, r]));
+const fieldOnly = Object.fromEntries(shotCompleteness({ ...shot, prompt: L03.replace(/\n对白[^\n]*/, ""), dialogue: [{ roleId: "roleA", text: "这张表算错了。" }] }, ctx).map((r) => [r.id, r]));
 assert.equal(fieldOnly.dialogue.state, "missing"); assert.match(fieldOnly.dialogue.note, /dialogue 字段/); assert.match(fieldOnly.dialogue.note, /没有「对白/);
 assert.ok(result.style.evidence.some((e) => e.includes("Kodak Vision3 250D")), "点开能看到原文");
 assert.ok(result.camera.evidence.length && result.light.evidence.length);
@@ -106,7 +106,7 @@ assert.equal(categoryTableStale("v2099-01-01.1"), true);
 
 // ── 3b. 标准范本（正本 v2026-11-11.2 的标准队列实测 EP02v5 L03，h3q 0 错 0 警 0 提示）：必须 0 漏写 ──
 const H3 = process.env.FRAMEFLOW_H3_TOOLS || "h3-tools";
-const SAMPLE = `${H3}/范本/示例项目_EP02v5_L03_标准/示例项目_EP02v5_L03_标准_queue.json`;
+const SAMPLE = new URL("./fixtures/episode-settings/sample-complete.json", import.meta.url);
 let sampleChecked = false;
 if (existsSync(SAMPLE)) {
   const sampleRows = queueCompleteness(parseShotQueue(readFileSync(SAMPLE, "utf8")), () => ({ visible: ["张三", "李四"], all: ["张三", "李四"] }));
@@ -120,8 +120,8 @@ if (existsSync(SAMPLE)) {
 
 // ── 4. h3工具 下的现成队列：每镜每类都有结果，不抛错 ──
 let counted = 0;
-for (const name of ["EP01_queue.json", "EP02_queue.json"]) {
-  const file = `${H3}/${name}`;
+for (const name of ["L03_queue.json", "O1O2_queue.json"]) {
+  const file = new URL(`./fixtures/official-format/${name}`, import.meta.url);
   if (!existsSync(file)) continue;
   const q = parseShotQueue(readFileSync(file, "utf8"));
   for (const row of queueCompleteness(q, (s) => ({ visible: s.roleIds.filter((id) => !s.offscreenRoleIds?.includes(id)), all: s.roleIds }))) {

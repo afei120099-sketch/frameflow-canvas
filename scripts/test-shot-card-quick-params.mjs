@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 // 镜头卡片「参数」列快改：秒数 ▲▼、像素 0.45 / 0.88 快选、整集统一像素、正本 h3q「[时长]」建议秒数。
 // 不开浏览器、不提交 GPU；本机有正本时只读地跑一次 python h3q.py check 核对真实输出格式。
 import assert from "node:assert/strict";
@@ -133,9 +134,9 @@ assert.match(board, /只提醒，不拦截入队/);
 assert.doesNotMatch(readFileSync(new URL("../lib/shot-gate.ts", import.meta.url), "utf8"), /时长/, "画面五项拦截不看时长");
 
 // ── 7. 本机有正本（可选，FRAMEFLOW_H3_TOOLS）：真实 h3q 输出（标准范本 0 条）──
-const runH3q = (file) => execFileSync("python", ["-I", h3q, "check", file, "--all", "--skip-table"], { encoding: "utf8", windowsHide: true, cwd: H3_TOOLS });
+const runH3q = (file) => execFileSync(process.env.FRAMEFLOW_PYTHON || "python", ["-I", h3q, "check", file instanceof URL ? fileURLToPath(file) : file, "--all", "--skip-table"], { encoding: "utf8", windowsHide: true, cwd: H3_TOOLS });
 const titlesOf = (file) => JSON.parse(readFileSync(file, "utf8")).chapters.flatMap((chapter) => chapter.shots.map((shot) => shot.title));
-const SAMPLE = `${H3_TOOLS}/范本/示例项目_EP02v5_L03_标准/示例项目_EP02v5_L03_标准_queue.json`;
+const SAMPLE = new URL("./fixtures/episode-settings/sample-complete.json", import.meta.url);
 let live = "";
 if (existsSync(h3q) && existsSync(SAMPLE)) {
   let output = null; try { output = runH3q(SAMPLE); } catch (cause) { output = cause.stdout ?? null; }

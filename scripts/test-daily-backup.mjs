@@ -49,8 +49,8 @@ const noon = new Date(2026, 10, 10, 12, 0, 0).getTime();
 
 // 4. Real project: canvas + records saved, media NOT included; once per day.
 databases.clear();
-const imageRef = await storeLocalImage(new Blob(["PNG-bytes"], { type: "image/png" }), "lin.png");
-const image = await registerAsset({ kind: "image", origin: "imported", filename: "lin.png", mimeType: "image/png", storageReference: imageRef, sourceRunId: null, width: 64, height: 64 });
+const imageRef = await storeLocalImage(new Blob(["PNG-bytes"], { type: "image/png" }), "role-b.png");
+const image = await registerAsset({ kind: "image", origin: "imported", filename: "role-b.png", mimeType: "image/png", storageReference: imageRef, sourceRunId: null, width: 64, height: 64 });
 await createShot("镜头 1", "shape:h3");
 await createRole("李四");
 const canvasDoc = (label) => ({ store: { "page:1": { id: "page:1", typeName: "page", name: "Page 1" }, "shape:img": { id: "shape:img", typeName: "shape", type: "image-node", parentId: "page:1", props: { src: imageRef, label } } }, schema: { schemaVersion: 2 } });

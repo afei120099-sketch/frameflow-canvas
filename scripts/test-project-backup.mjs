@@ -241,7 +241,7 @@ assert.equal(byId(original.records.runs, "runId", active.runId).status, "running
   canvasState = null;
   const director = await import("../lib/director-stage/store.ts");
   const asset = (await collectProject()).records.assets[0];
-  const scene = await director.createScene({ name: "《这一笔》书房" });
+  const scene = await director.createScene({ name: "《示例项目》书房" });
   const chair = await director.createProp({ sceneId: scene.id, name: "椅子", type: "chair" });
   const upright = await director.createSceneState({ sceneId: scene.id, name: "椅子立着", propChanges: [{ propId: chair.id, description: "立在书桌前" }] });
   const fallen = await director.createSceneState({ sceneId: scene.id, name: "椅子倒地", propChanges: [{ propId: chair.id, description: "侧倒" }] });
@@ -276,7 +276,7 @@ assert.equal(byId(original.records.runs, "runId", active.runId).status, "running
   const report = await restoreProject(parsed, canvas);
   assert.equal(report.ok, true, JSON.stringify(report.steps));
   assert.deepEqual(report.steps.map((step) => step.step), ["media", "records", "roles", "director", "canvas"]);
-  assert.equal((await director.getScene(scene.id))?.name, "《这一笔》书房");
+  assert.equal((await director.getScene(scene.id))?.name, "《示例项目》书房");
   assert.equal((await director.getProp(chair.id))?.sceneId, scene.id);
   assert.deepEqual((await director.listSceneStates(scene.id)).map((state) => state.id).sort(), [upright.id, fallen.id].sort());
   assert.equal((await director.listMotions(scene.id))[0].targetId, camera.id);

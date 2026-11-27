@@ -307,7 +307,7 @@ const canvasUiComponents: TLComponents = {
   ErrorFallback: CanvasErrorFallback,
   ShapeErrorFallback: CanvasShapeErrorFallback,
   Background: CameraDotBackground,
-  InFrontOfTheCanvas: () => { const editor = useEditor(); return <><ConnectionHighlightOverlay /><BatchReferenceAction editor={editor} /><BatchVideoActions editor={editor} /><CanvasInteractionUI editor={editor} /><TelegramCanvasBridge /></>; },
+  InFrontOfTheCanvas: () => { const editor = useEditor(); return <><ConnectionHighlightOverlay /><BatchReferenceAction editor={editor} /><BatchVideoActions editor={editor} /><CanvasInteractionUI editor={editor} />{process.env.NEXT_PUBLIC_FRAMEFLOW_TELEGRAM_BRIDGE === "1" && <TelegramCanvasBridge />}</>; },
   Toolbar: CreativeToolbar,
   ContextMenu: FluxCanvasContextMenu,
   StylePanel: CollapsibleStylePanel,

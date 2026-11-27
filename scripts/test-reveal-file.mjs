@@ -190,7 +190,7 @@ try {
     // 旧服务器（没有这个接口，404）：纯 ComfyUI 文件名按默认根目录拼，标成没核实
     const guessed = await locateLocalFiles([
       { files: [{ filename: "Frameflow_Demix_abc_00001_.mp4", subfolder: "video", type: "output" }] },
-      { files: [{ filename: "Frameflow_H3_ultimate_01732-audio.mp4" }] },
+      { files: [{ filename: "Frameflow_H3_ultimate_sample-audio.mp4" }] },
       { files: [{ filename: "x.png", subfolder: "", type: "input" }] },
       { path: "C:/data/a.mp4" },
       null,
@@ -199,7 +199,7 @@ try {
     assert.equal(guessed.verified, false);
     assert.deepEqual(guessed.paths, [
       `${DEFAULT_COMFYUI_ROOT}\\output\\video\\Frameflow_Demix_abc_00001_.mp4`,
-      `${DEFAULT_COMFYUI_ROOT}\\output\\video\\Frameflow_H3_ultimate_01732-audio.mp4`,
+      `${DEFAULT_COMFYUI_ROOT}\\output\\video\\Frameflow_H3_ultimate_sample-audio.mp4`,
       `${DEFAULT_COMFYUI_ROOT}\\input\\x.png`,
       "C:\\data\\a.mp4",
       null,

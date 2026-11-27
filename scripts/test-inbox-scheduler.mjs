@@ -32,7 +32,7 @@ export async function harness({receipts={},paused=false,sessions=[],runs=[],asse
     readInboxRootSnapshot:()=>data.rootControl,
     useRef:value=>({current:value}),useEffect:fn=>{cleanup=fn();},setInterval:fn=>{timer=fn;return 1;},clearInterval(){},
     navigator:{locks:{request:async(_name,_opts,fn)=>fn(lock?{}:null)}},
-    window:{},xianxiaPageId:()=> 'page:target',runXianxiaRelocateOnce:async()=>{},runInboxDelete:async()=>{},
+    window:{},runInboxDelete:async()=>{},
     assertInboxHandoffNotStarted,listCleanupMetadata:async()=>sessions.map(s=>({key:'shot-queue-session-v1:'+s.pageId,value:s})),listRuns:async()=>runs,getMeta:async key=>metadata.get(key)??sessions.find(s=>key.endsWith(s.pageId))??null,putMeta:async(key,value)=>metadata.set(key,structuredClone(value)),queueSessionKey:id=>'session:'+id,
     inboxReceiptBlocks,pageSlotHasWork,rolloutProtectsQueue,rolloutProtectsCommand,latestQueueRun,queueEntryUncertain,parseShotQueue,inboxHandoffExpired,inboxProgress,validateInboxQueue,listAssets:async()=>assets,listAllAssets:async()=>assets,listRoles:async()=>roles,
     readInboxRecovery:()=>controller,

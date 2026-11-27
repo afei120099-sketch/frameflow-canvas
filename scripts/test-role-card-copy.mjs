@@ -4,7 +4,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 
 const source = fs.readFileSync('components/role-library.tsx', 'utf8');
-const role = { roleId: '0144d66a-9f9c-4000-8000-123456789abc', displayName: '沈宴', appearanceAssetIds: [], voiceAssetIds: [], description: '' };
+const role = { roleId: '00000000-0000-4000-8000-000000000016', displayName: '张三', appearanceAssetIds: [], voiceAssetIds: [], description: '' };
 const copied = [], setters = [];
 let stateIndex = 0, copyOK = true;
 const element = (type, props, ...children) => ({ type, props: { ...props, children } });
@@ -36,11 +36,11 @@ function walk(node, insideButton = false) {
 walk(tree);
 const copy = buttons.find(button => button.props.className === 'role-card-copy');
 assert.ok(copy);
-assert.equal(copy.props['aria-label'], '复制沈宴的名称和ID');
+assert.equal(copy.props['aria-label'], '复制张三的名称和ID');
 copy.props.onClick();
 await new Promise(resolve => setImmediate(resolve));
-assert.equal(copied[0], `角色名称：沈宴\nroleId: ${role.roleId}`);
-assert.ok(setters.some(item => item.value === '已复制“沈宴”的名称和完整 ID'));
+assert.equal(copied[0], `角色名称：张三\nroleId: ${role.roleId}`);
+assert.ok(setters.some(item => item.value === '已复制“张三”的名称和完整 ID'));
 assert.ok(!setters.some(item => item.index === 2), 'copy must not select/open role');
 copyOK = false;
 copy.props.onClick();

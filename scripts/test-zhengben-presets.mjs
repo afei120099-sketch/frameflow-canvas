@@ -74,7 +74,7 @@ for (const kind of ["film", "light", "camera", "lens", "compose"]) {
 }
 
 // ── 4. 整集都换：一字不差的才换 ──
-const shot = (title, prompt) => ({ title, prompt, roleIds: ["zy", "lw"], sceneAssetIds: ["office"], seconds: 10, aspect: "9:16", soundMode: "av" });
+const shot = (title, prompt) => ({ title, prompt, roleIds: ["roleA", "roleB"], sceneAssetIds: ["office"], seconds: 10, aspect: "9:16", soundMode: "av" });
 const queue = parseShotQueue(JSON.stringify({ version: "shot-queue-v1", title: "预设", chapters: [{ title: "一", shots: [shot("A", L03), shot("B", L03.replace("0-3秒：他抬眼", "0-3秒：他低头"))] }, { title: "二", shots: [shot("C", L03.replace("Kodak Vision3 250D 胶片颗粒", "Fuji Eterna 胶片颗粒"))] }] }));
 const plan = planEpisodePreset(queue, 0, 0, { kind: "film", text: "Kodak Vision3 500T 胶片颗粒" });
 assert.deepEqual(plan.changed, ["A", "B"]); assert.deepEqual(plan.skipped, ["C"]);

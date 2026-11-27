@@ -18,8 +18,8 @@ const worker = new AutopilotWorker({ root, comfy: new ComfyUIH3Adapter(comfy.url
 const retired = (cause) => cause.code === "RETIRED" && cause.status === 410 && cause.message === AUTOPILOT_RETIRED_MESSAGE;
 try {
   await assert.rejects(worker.create(), retired, "M1 三镜头测试不能再开工");
-  await assert.rejects(worker.confirm("00000000-0000-4000-8000-000000000000"), retired, "M2 导演计划不能再开始制作");
-  await assert.rejects(worker.resume("00000000-0000-4000-8000-000000000000"), retired, "暂停的旧任务不能继续");
+  await assert.rejects(worker.confirm("00000000-0000-4000-8000-000000000012"), retired, "M2 导演计划不能再开始制作");
+  await assert.rejects(worker.resume("00000000-0000-4000-8000-000000000012"), retired, "暂停的旧任务不能继续");
   assert.deepEqual((await worker.list()).jobs, [], "没有建出任何任务");
   assert.equal(comfy.state.prompts.length, 0, "没有向 ComfyUI 提交");
   assert.match(AUTOPILOT_RETIRED_MESSAGE, /夜班已下线/);

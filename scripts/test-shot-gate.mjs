@@ -16,7 +16,7 @@ assert.deepEqual([...GATE_CATEGORIES], ["style", "light", "shotsize", "compose",
 
 // ── 1. 标准范本：五项都写了，能入队 ──
 const H3_TOOLS = process.env.FRAMEFLOW_H3_TOOLS || "h3-tools";
-const SAMPLE = `${H3_TOOLS}/范本/示例项目_EP02v5_L03_标准/示例项目_EP02v5_L03_标准_queue.json`;
+const SAMPLE = new URL("./fixtures/episode-settings/sample-complete.json", import.meta.url);
 let sampleChecked = false;
 if (existsSync(SAMPLE)) {
   const sample = parseShotQueue(readFileSync(SAMPLE, "utf8"));

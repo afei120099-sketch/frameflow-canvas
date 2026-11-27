@@ -25,9 +25,9 @@ assert.equal(replaceSegments(en, enSeg, enSeg.map((s) => s.text)), en);
 assert.ok(enSeg.some((s) => s.label === "0–3秒") && enSeg.some((s) => s.label === "开始"));
 
 // 旧队列 dialogue 字段 → 正文对白行（正本「第一集写法」），dialogue 清空；其余正文一字不动。
-const names = { zy: "张三", lw: "李四" };
-const shot = { title: "L03", prompt, roleIds: ["zy", "lw"], sceneAssetIds: [], seconds: 8, aspect: "9:16", soundMode: "av", autoVoiceAssigned: true,
-  dialogue: [{ roleId: "zy", text: "这张表算错了。过来。" }, { roleId: "lw", text: "不行啊。" }] };
+const names = { roleA: "张三", roleB: "李四" };
+const shot = { title: "L03", prompt, roleIds: ["roleA", "roleB"], sceneAssetIds: [], seconds: 8, aspect: "9:16", soundMode: "av", autoVoiceAssigned: true,
+  dialogue: [{ roleId: "roleA", text: "这张表算错了。过来。" }, { roleId: "roleB", text: "不行啊。" }] };
 const fixed = dialogueFieldToRow(shot, (id) => names[id]);
 assert.ok("shot" in fixed, JSON.stringify(fixed));
 assert.equal("dialogue" in fixed.shot, false);

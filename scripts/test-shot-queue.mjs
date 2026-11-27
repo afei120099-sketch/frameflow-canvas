@@ -3,21 +3,21 @@ import { planH3Submission } from "../lib/comfyui/h3-adapter.ts";
 import { parseShotQueue, planShotReferences, runChapterShots, shotQueueExample, shotQueueH3Props, SHOT_QUEUE_LOCK, SHOT_QUEUE_WORKFLOW } from "../lib/shot-queue.ts";
 
 const sample = shotQueueExample();
-sample.chapters[0].shots[0].roleIds = ["role-lin"];
+sample.chapters[0].shots[0].roleIds = ["role-role-b"];
 sample.chapters[0].shots[0].sceneAssetIds = ["scene-door"];
 const queue = parseShotQueue(JSON.stringify(sample));
 assert.equal(queue.chapters[0].shots[0].aspect, "9:16");
 assert.equal(queue.chapters[0].shots[0].soundMode, "av");
 
-const roles = [{ roleId: "role-lin", displayName: "李四", primaryAppearanceAssetId: "face-lin" }];
+const roles = [{ roleId: "role-role-b", displayName: "李四", primaryAppearanceAssetId: "face-role-b" }];
 const assets = new Map([
-  ["face-lin", { assetId: "face-lin", kind: "image", storageReference: "image:face", filename: "lin.png" }],
+  ["face-role-b", { assetId: "face-role-b", kind: "image", storageReference: "image:face", filename: "role-b.png" }],
   ["scene-door", { assetId: "scene-door", kind: "image", storageReference: "image:door", filename: "door.png" }],
 ]);
 const plan = planShotReferences(queue.chapters[0].shots[0], roles, assets);
 const props = shotQueueH3Props(queue.chapters[0].shots[0], plan);
 assert.deepEqual(props.referenceImages.map((item) => item.name), ["door.png"]);
-assert.deepEqual(props.roleIds, ["role-lin"]);
+assert.deepEqual(props.roleIds, ["role-role-b"]);
 assert.equal(SHOT_QUEUE_WORKFLOW, "community-ultimate");
 assert.equal(props.workflowOptionId, SHOT_QUEUE_WORKFLOW);
 assert.equal(props.workflowLock, "queue-config-v2");
@@ -32,7 +32,7 @@ const planned = planH3Submission({
   prompt: props.prompt,
   seed: 1,
   settings: { length: 141, aspect: "9:16", megapixels: 0.5, turbo: true, steps: 10, fps: 24, loraStrength: 0.75, upscaleMethod: "lanczos", resolutionSteps: 32, soundMode: "ambient" },
-}, { references: { images: ["lin.png", "door.png"], videos: [], audios: [] } });
+}, { references: { images: ["role-b.png", "door.png"], videos: [], audios: [] } });
 assert.equal(planned.taskMode, "ref2va");
 assert.equal(planned.workflow["136"].class_type, "MiniMaxH3ReferenceToVideo");
 assert.equal(Object.keys(planned.workflow["136"].inputs).filter((key) => key.startsWith("ref_images.")).length, 2);
@@ -49,7 +49,7 @@ assert.equal(parseShotQueue(JSON.stringify(expandedQueue)).chapters[0].shots.len
 assert.equal(parseShotQueue(JSON.stringify(expandedQueue)).chapters[0].shots[0].prompt, expandedShot.prompt);
 assert.equal(parseShotQueue(JSON.stringify({ ...queue, chapters: [{ ...queue.chapters[0], shots: Array.from({ length: 21 }, () => queue.chapters[0].shots[0]) }] })).chapters[0].shots.length, 21);
 assert.throws(() => parseShotQueue(JSON.stringify({ ...queue, chapters: [{ ...queue.chapters[0], shots: [{ ...expandedShot, prompt: "p".repeat(12001) }] }] })), /12000/);
-assert.throws(() => planShotReferences(queue.chapters[0].shots[0], roles, new Map([["face-lin", assets.get("face-lin")], ["scene-door", assets.get("face-lin")]])), /同一张/);
+assert.throws(() => planShotReferences(queue.chapters[0].shots[0], roles, new Map([["face-role-b", assets.get("face-role-b")], ["scene-door", assets.get("face-role-b")]])), /同一张/);
 
 const calls = [];
 const states = new Map();

@@ -724,7 +724,7 @@ export function DirectorStagePanel({ onClose, onSendToH3, onImportImage, onSendS
         <button type="button" className="role-delete" disabled={working} onClick={removeScene}><Trash2 size={14} />删除场景（素材不受影响）</button>
       </div> : <div className="role-list">
         <div className="role-create">
-          <input aria-label="场景名称" placeholder="场景名称，例如：《这一笔》书房" value={sceneName} onChange={(event) => setSceneName(event.target.value)} onKeyDown={enter(() => void addScene())} />
+          <input aria-label="场景名称" placeholder="场景名称，例如：《示例项目》书房" value={sceneName} onChange={(event) => setSceneName(event.target.value)} onKeyDown={enter(() => void addScene())} />
           <button type="button" className="role-main-action" disabled={working || !sceneName.trim()} onClick={() => void addScene()}><Plus size={15} />新建场景</button>
         </div>
         {summaries === null && !error && <p className="role-hint">正在读取导演台数据…</p>}

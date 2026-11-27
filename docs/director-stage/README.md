@@ -309,7 +309,6 @@
 - **记录**：写实首帧包的 `render.pass = "sdxl_first_frame"`，`render.generator` 记录模板及其 SHA、底模、ControlNet、控制强度、步数、CFG、种子、完整提示词、ComfyUI 任务 ID，以及来源深度包和深度 Asset。它和深度包使用同一个 groupId。
 - **代码位置**：适配器 `lib/comfyui/sdxl-depth-firstframe.ts`，流程 `lib/director-stage/depth-firstframe.ts`；H3 模板、Shot、AddGuide、Asset 结构都没有改动。
 - **测试**：`test:sdxl-depth-firstframe`，用假 ComfyUI，不占 GPU。
-- **真实 GPU 验收**：启动配置 `canvas-smoke-isolated-gpu`（`.claude/smoke-gpu.env`），让 5180 的 `/comfyui` 代理指向真实 8188；默认的隔离测试配置仍然指向假服务。
 
 ## 变更记录
 

@@ -8,13 +8,13 @@ import { parseH3qOutput } from "../lib/h3q-report.ts";
 import { parseShotQueue } from "../lib/shot-queue.ts";
 
 // ── 1. 解析：h3q 2026-11-12 真实输出原样 ──
-const REAL = "[接尾帧] 可以考虑接上一镜尾帧：EP03-v4-3-6｜现在别去 → EP03-v4-3-7｜葫芦娃剧场；理由：同一场景图、同一组人，机位景别一样（平视，工位中景，固定），站位接得上（她在画左、他在画右）。接上就在这一镜写 firstFrameFrom 上一镜 last（generationMode first-last）；代价是上一镜的瑕疵会带进来、要等上一镜出完再排（正本 什么时候用接尾帧）";
-assert.deepEqual(parseChainHint(REAL), { from: "EP03-v4-3-6｜现在别去", to: "EP03-v4-3-7｜葫芦娃剧场", why: "同一场景图、同一组人，机位景别一样（平视，工位中景，固定），站位接得上（她在画左、他在画右）" });
+const REAL = "[接尾帧] 可以考虑接上一镜尾帧：S01｜示例镜头A → S02｜示例镜头B；理由：同一场景图、同一组人，机位景别一样（平视，工位中景，固定），站位接得上（她在画左、他在画右）。接上就在这一镜写 firstFrameFrom 上一镜 last（generationMode first-last）；代价是上一镜的瑕疵会带进来、要等上一镜出完再排（正本 什么时候用接尾帧）";
+assert.deepEqual(parseChainHint(REAL), { from: "S01｜示例镜头A", to: "S02｜示例镜头B", why: "同一场景图、同一组人，机位景别一样（平视，工位中景，固定），站位接得上（她在画左、他在画右）" });
 // 最简格式（理由后面没有做法说明）
 assert.deepEqual(parseChainHint("[接尾帧] 可以考虑接上一镜尾帧：A → B；理由：同场同人"), { from: "A", to: "B", why: "同场同人" });
 assert.equal(parseChainHint("[时长] 偏长：建议约 5 秒"), null);
 assert.equal(parseChainHint("接尾帧镜建议开头写 continuing from the opening frame already moving"), null, "h3q 另一条接尾帧 HINT 不是建议");
-assert.equal(chainHintOf([{ message: "[ID] x" }, { message: REAL }])?.to, "EP03-v4-3-7｜葫芦娃剧场");
+assert.equal(chainHintOf([{ message: "[ID] x" }, { message: REAL }])?.to, "S02｜示例镜头B");
 assert.equal(chainHintOf(null), null);
 
 // ── 2. 一键接上 ──

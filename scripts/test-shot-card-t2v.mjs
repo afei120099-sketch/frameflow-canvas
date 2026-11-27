@@ -8,7 +8,7 @@ import { parseShotQueue, planShotReferences } from "../lib/shot-queue.ts";
 import { referenceProblems, referenceCellText } from "../lib/shot-card-ref-help.ts";
 
 const EP03 = process.env.FRAMEFLOW_TEST_QUEUE || "";
-const INLINE = { title: "EP03-v4-3-5｜版本历史截图", roleIds: [], sceneAssetIds: [], seconds: 6, aspect: "9:16", soundMode: "av", prompt: [
+const INLINE = { title: "S01｜示例镜头A（版本历史截图）", roleIds: [], sceneAssetIds: [], seconds: 6, aspect: "9:16", soundMode: "av", prompt: [
   "参考说明（编号与提交顺序一致）：这一镜只拍屏幕和手，没有参考图。",
   "写实真人电影质感，Kodak Vision3 250D 胶片颗粒，真实皮肤毛孔与细小绒毛，布料褶皱与纤维清晰，生活感真实。开放办公区工位上，笔记本电脑放在桌上。笔记本电脑屏幕特写，平视，100mm 等效，浅景深，景深到屏幕上的字，机位固定，屏幕居中占满画面。前景是画面下沿的右手和鼠标，中景是高亮那一行，后景是列表的深色底。",
   "光线：屏幕自身发光，亮度适中，屏幕上的字清晰锐利。",
@@ -49,10 +49,10 @@ assert.equal(bareRows.at(-1).lines[0], "0-3秒：屏幕亮起。");
 assert.deepEqual(t2vDescription(bare, undefined).slice(0, 4).map((item) => item.lines.length), [0, 0, 0, 0], "完整度还没算完：先都写没写");
 
 // ── 2. 不是文生视频 ──
-assert.equal(isTextToVideo({ ...INLINE, sceneAssetIds: ["f0e5b3fe-b5b2-44d5-81ca-a458d5b4310c"] }), false);
+assert.equal(isTextToVideo({ ...INLINE, sceneAssetIds: ["00000000-0000-4000-8000-00000000001a"] }), false);
 assert.equal(isTextToVideo({ ...INLINE, firstFrameFrom: { shot: "previous", frame: "last" } }), false);
-assert.equal(isTextToVideo({ ...INLINE, roleIds: ["c68aa343-fccb-4877-a776-2fc30bef7df0"] }), false);
-assert.equal(isTextToVideo({ ...INLINE, roleIds: ["c68aa343-fccb-4877-a776-2fc30bef7df0"], offscreenRoleIds: ["c68aa343-fccb-4877-a776-2fc30bef7df0"] }), true, "只有画外角色也不交图");
+assert.equal(isTextToVideo({ ...INLINE, roleIds: ["00000000-0000-4000-8000-00000000000b"] }), false);
+assert.equal(isTextToVideo({ ...INLINE, roleIds: ["00000000-0000-4000-8000-00000000000b"], offscreenRoleIds: ["00000000-0000-4000-8000-00000000000b"] }), true, "只有画外角色也不交图");
 // 真排不出来：红色那条（参考图 / ID 说人话）
 const broken = { ...INLINE, sceneAssetIds: ["办公室"] };
 const brokenCell = referenceCellText(referenceProblems(broken, [], new Map()), "场景图不存在或不是图片：办公室");

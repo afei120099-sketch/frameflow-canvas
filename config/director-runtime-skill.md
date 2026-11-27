@@ -1,7 +1,7 @@
 ---
 id: director-runtime-skill
 version: director-runtime-skill-v1
-source: "AI视频导演 SKILL 2.0 正式版 (2026-09-22) §5–8, §12–14, §16; AI视频无限画布 SKILL V1.0 §20 — condensed for automatic M2 planning"
+source: "Frameflow director runtime planning rules"
 scope: "Director planning only (what to shoot, how to shoot it). The final video-model prompt is written by the deterministic compiler."
 ---
 # Director Runtime Skill

@@ -17,7 +17,7 @@ const src = ["lib", "components"].flatMap((dir) => ["hard-rules.ts", "shot-gate.
 for (const file of src) { let text = ""; try { text = readFileSync(new URL(file, import.meta.url), "utf8"); } catch { continue; } assert.ok(!/\[同性别对白\]|\[说话人站位\]|same_gender|speaker_position/.test(text.replace(/^.*撤回.*$/gm, "")), `${file} 还接着已撤的前缀`); }
 
 // ── 2. 每条单镜 ERROR 都拦，分组 ──
-const shot = { title: "EP03-v4-3-9｜就我们两个", prompt: "0-1秒：他说话。\n对白（中文普通话，口型同步）：张三：“这张表算错了。”" };
+const shot = { title: "S01｜示例镜头A", prompt: "0-1秒：他说话。\n对白（中文普通话，口型同步）：张三：“这张表算错了。”" };
 const items = [
   { level: "ERROR", where: "", message: "[五项·光线] 没有光线句" },
   { level: "ERROR", where: "", message: "[开场空白] 第 3 秒才开始。按剧情选一种改：①a；②b；③c" },

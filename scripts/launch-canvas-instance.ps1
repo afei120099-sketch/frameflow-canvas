@@ -7,11 +7,11 @@
 
 $ErrorActionPreference = "Stop"
 $projectDirectory = Split-Path -Parent $PSScriptRoot
-$known = @{
-  "page1" = @{ Name = "Page 1"; Port = 5174; InboxPort = 5194; ClaimPort = 8804 }
-  "xincanvas" = @{ Name = "新画布"; Port = 5175; InboxPort = 5195; ClaimPort = 8805 }
-  "yemian1" = @{ Name = "页面 1"; Port = 5176; InboxPort = 5196; ClaimPort = 8806 }
-  "yemian2" = @{ Name = "页面 2"; Port = 5177; InboxPort = 5197; ClaimPort = 8807 }
+$known = @{}
+if ($env:NEXT_PUBLIC_FRAMEFLOW_SPLIT_PAGES) {
+  foreach ($entry in ($env:NEXT_PUBLIC_FRAMEFLOW_SPLIT_PAGES | ConvertFrom-Json)) {
+    $known[$entry.id] = @{ Name = $entry.label; Port = $entry.port; InboxPort = $entry.inboxPort; ClaimPort = $entry.claimPort }
+  }
 }
 if (-not $Id -and $Name) {
   $found = $known.GetEnumerator() | Where-Object { $_.Value.Name -eq $Name } | Select-Object -First 1

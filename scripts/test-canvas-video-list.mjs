@@ -20,13 +20,13 @@ assert.deepEqual(order([box("p", 0, 0), box("q", 0, 0)]), ["p", "q"], "完全重
 
 // ── 2. 文本格式 ──
 const text = formatVideoList([
-  { title: "EP10-v1-10-1｜镜头1", path: "C:\\ComfyUI_windows_portable\\ComfyUI\\output\\video\\Frameflow_H3_ultimate_01732-audio.mp4" },
+  { title: "S01｜镜头1", path: "C:\\ComfyUI_windows_portable\\ComfyUI\\output\\video\\Frameflow_H3_ultimate_sample-audio.mp4" },
   { title: "", path: null },
   { title: "第三\n镜", path: "C:\\data\\c.mp4" },
 ]);
 assert.equal(text, [
   "共 3 个视频（按画布从左到右、从上到下排序）",
-  "01｜EP10-v1-10-1｜镜头1｜C:\\ComfyUI_windows_portable\\ComfyUI\\output\\video\\Frameflow_H3_ultimate_01732-audio.mp4",
+  "01｜S01｜镜头1｜C:\\ComfyUI_windows_portable\\ComfyUI\\output\\video\\Frameflow_H3_ultimate_sample-audio.mp4",
   `02｜未命名｜${NOT_LOCAL}`,
   "03｜第三 镜｜C:\\data\\c.mp4",
   "其中 1 个没找到本机文件：序号 02",

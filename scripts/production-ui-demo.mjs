@@ -38,7 +38,7 @@ const worker = new ProductionWorker({
 });
 await worker.start();
 const def = structuredClone(EPISODE_TEMPLATE);
-def.title = "七位仙子 · 第1集（界面演示）";
+def.title = "示例项目 · 第1集（界面演示）";
 def.shots.push({ ...def.shots[0], shotId: "S03", title: "两人对视", storyboard: "S03.png", faceRole: "zhangsan", seconds: 7 }, { ...def.shots[1], shotId: "S04", title: "空办公室", storyboard: "S04.png", faceRole: null, seconds: 5 });
 const ep = await worker.createEpisode(JSON.stringify(def));
 const names = ["S01.png", "S02.png", "S03.png", "zhangsan_face.png", "lisi_face.png", "zhangsan_full.png", "lisi_full.png", "zhangsan_voice.wav", "lisi_voice.wav"];

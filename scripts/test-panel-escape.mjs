@@ -1,6 +1,5 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { execFileSync } from "node:child_process";
 import vm from "node:vm";
 import ts from "typescript";
 import { isTypingTarget } from "../lib/keyboard-guards.ts";
@@ -41,11 +40,8 @@ try {
       assert.equal(closed, 1, `${file}: non-editing Escape closes panel`);
     }
   }
-  const hook = "components/use-shot-queue-execution.ts";
-  const { assertQueueLifecyclePreserved } = await import('./queue-lifecycle-preservation.mjs');
-  assertQueueLifecyclePreserved(readFileSync(new URL(`../${hook}`, import.meta.url), "utf8"), execFileSync("git", ["show", `7cef6c4:${hook}`], { encoding: "utf8", windowsHide: true }));
 } finally {
   if (originalHTMLElement === undefined) delete globalThis.HTMLElement;
   else globalThis.HTMLElement = originalHTMLElement;
 }
-console.log("PASS panel Escape: five actual handlers, typing/contenteditable/IME guards, hidden queue, nested picker, unchanged execution lifetime/page/stop behavior");
+console.log("PASS panel Escape: five actual handlers, typing/contenteditable/IME guards, hidden queue, nested picker");

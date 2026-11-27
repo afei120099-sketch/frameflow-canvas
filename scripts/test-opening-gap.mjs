@@ -20,8 +20,8 @@ assert.equal(canvasOpeningGap(P("他看着她说话。", DIALOGUE)), null, "没�
 assert.deepEqual(promptSegments("0-3秒：a。3-6秒：b\n6-9秒：c").map((s) => [s.start, s.text]), [[0, "a。"], [3, "b"], [6, "c"]]);
 
 // ── 2. 拦截：h3q 为准（只认前缀），兜底，人工放行 ──
-const shot = { title: "EP03-v4-3-9｜就我们两个", prompt: P("0-3秒：他抬眼看她。", "3-8秒：他说话。", DIALOGUE) };
-const h3qGap = [{ level: "ERROR", where: "镜1", message: "[开场空白] EP03-v4-3-9｜就我们两个：有台词，但第一句说话在第 3 秒才开始（随便以后怎么改写）" }];
+const shot = { title: "S01｜示例镜头A", prompt: P("0-3秒：他抬眼看她。", "3-8秒：他说话。", DIALOGUE) };
+const h3qGap = [{ level: "ERROR", where: "镜1", message: "[开场空白] S01｜示例镜头A：有台词，但第一句说话在第 3 秒才开始（随便以后怎么改写）" }];
 assert.deepEqual(shotGate(shot, [], h3qGap).map((i) => [i.id, i.source]), [["opening_gap", "h3q"]], "h3q 报了：按前缀认，后面文字随正本改");
 assert.match(shotGate(shot, [], h3qGap)[0].note, /第 3 秒才开始/, "显示 h3q 原话");
 assert.deepEqual(shotGate(shot, [], []), [], "h3q 查过、没报：以 h3q 为准，不再自己判");

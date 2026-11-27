@@ -1,10 +1,13 @@
 // Isolated browser context. All ComfyUI HTTP requests go to a disposable fake; never real GPU.
 import assert from "node:assert/strict";
+import { browserTestFixtures } from './browser-test-fixtures.mjs';
 import { pathToFileURL } from "node:url";
 import { startFakeComfy } from "./fake-comfyui.mjs";
 const [playwrightEntry, executablePath, baseUrl = "http://localhost:5173/"] = process.argv.slice(2);
+if (!process.argv[2] || !executablePath) throw new Error("Provide Playwright module path and browser executable, plus an isolated smoke server URL");
+const fixtures = browserTestFixtures({ video: true });
 const { chromium } = await import(pathToFileURL(playwrightEntry).href);
-const fake = await startFakeComfy({ files: [{ seed: 1, path: ".claude/artifacts/v1-final/h3.mp4" }], runMs: 100 });
+const fake = await startFakeComfy({ files: [{ seed: 1, path: fixtures.video }], runMs: 100 });
 const browser = await chromium.launch({ executablePath, headless: true });
 const page = await browser.newPage({ viewport: { width: 1900, height: 1900 } });
 const errors = [];
@@ -55,7 +58,7 @@ try {
   await dock.getByRole("button", { name: "☆ 采用", exact: true }).click();
   await dock.getByRole("button", { name: "★ 已采用", exact: true }).waitFor();
   await node.locator(".h3-preview video").evaluate(video => video.pause());
-  await page.screenshot({ path: ".claude/generation-count-browser.png" });
+  await page.screenshot({ path: fixtures.screenshot('generation-count-browser.png') });
   await node.locator(".h3-candidates-link").click();
   await page.locator('.shot-candidate-list > button').first().waitFor();
   assert.equal(await page.locator('.shot-candidate-list > button').count(), 3);
@@ -91,5 +94,5 @@ try {
   assert.match(await node.locator('.h3-candidates-link').innerText(), /候选 3/);
   assert.deepEqual(errors, []);
   console.log("PASS: default/persisted count, serial execution, unique IDs/seeds, three saved candidates, cancel/failure/thermal stop remaining submissions and preserve results; no GPU");
-} catch (cause) { console.error(errors); console.error((await page.locator("body").innerText()).slice(0, 1600)); await page.screenshot({ path: ".claude/generation-count-failure.png" }); throw cause; }
-finally { await browser.close(); await fake.close(); }
+} catch (cause) { console.error(errors); console.error((await page.locator("body").innerText()).slice(0, 1600)); await page.screenshot({ path: fixtures.screenshot('generation-count-failure.png') }); throw cause; }
+finally { await browser.close(); fixtures.cleanup(); await fake.close(); }

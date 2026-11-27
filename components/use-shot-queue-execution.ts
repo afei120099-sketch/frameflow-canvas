@@ -769,7 +769,7 @@ export function useShotQueueExecution({ editor, queue, restore, message, createN
       return {frameIntegrity,pageId,sessionId,checkedAt:new Date().toISOString(),...diagnostic,matches:diagnostic.matches&&!liveChangedDuringRead,liveChangedDuringRead,tasks,nodes:saved.entries.map(entry=>({nodeId:entry.nodeId,execution:entry.execution,chapter:entry.chapter,shot:entry.shot,submissionState:entry.submissionState,outcome:entry.outcome,error:entry.error,uncertain:queueEntryUncertain(entry,owned),exists:!!entry.nodeId&&!!editor.getShape(entry.nodeId as TLShape["id"])}))};
     },
     resume:async(target:InboxResumeTarget)=>{
-      if(target.pageId!==pageId||editor.getCurrentPageId()!==pageId||!ready||!queue||stopRef.current)throw Error("请保持原仙侠页和队列就绪，且不要并行恢复");
+      if(target.pageId!==pageId||editor.getCurrentPageId()!==pageId||!ready||!queue||stopRef.current)throw Error("请保持原页面和队列就绪，且不要并行恢复");
       const saved=await loadSession();
       if(!saved||saved.id!==target.sessionId||JSON.stringify(saved.queue)!==JSON.stringify(queue))throw Error("原会话与当前队列不一致，禁止新建或替换");
       const runs=await listRuns();

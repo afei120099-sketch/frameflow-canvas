@@ -34,7 +34,7 @@ try {
  assert.equal((await post({name:'素材清单.md'},'清单')).status,200);
  assert.equal(await readFile(path.join(root,'_素材库给AI','素材清单.md'),'utf8'),'清单');
  const jpg = new Uint8Array([255,216,255,217]);
- const params = {name:'12345678-1234-1234-1234-123456789abc.jpg',thumbnail:'1'};
+ const params = {name:'00000000-0000-4000-8000-000000000011.jpg',thumbnail:'1'};
  assert.equal((await post(params,jpg)).status,200);
  assert.equal((await (await post(params,jpg)).json()).unchanged,true);
  console.log('asset AI export: manifest, grouping, role-bound generated image, instructions, traversal and unchanged thumbnail passed');

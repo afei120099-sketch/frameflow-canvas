@@ -50,23 +50,41 @@ export function historyBelongsToThisInstance(entry: { prompt?: unknown }) {
   return marked === mine;
 }
 
-export const SPLIT_PAGES = [
-  { id: "page1", port: 5174, label: "Page 1", inboxPort: 5194, claimPort: 8804, match: (name: string) => name.trim() === "Page 1" },
-  { id: "xincanvas", port: 5175, label: "新画布", inboxPort: 5195, claimPort: 8805, match: (name: string) => name.trim() === "新画布" },
-  { id: "yemian1", port: 5176, label: "页面 1", inboxPort: 5196, claimPort: 8806, match: (name: string) => name.trim() === "页面 1" },
-  { id: "yemian2", port: 5177, label: "页面 2", inboxPort: 5197, claimPort: 8807, match: (name: string) => name.trim() === "页面 2" },
-] as const;
+type SplitPage = { id: string; port: number; label: string; inboxPort: number; claimPort: number; match: (name: string) => boolean };
+
+// Public so the browser and server use the same build-time mapping. Empty means no splitting.
+export function parseSplitPages(raw: string): SplitPage[] {
+  if (!raw.trim()) return [];
+  const rows: unknown = JSON.parse(raw);
+  if (!Array.isArray(rows)) throw new Error("Page split configuration must be an array");
+  const ids = new Set<string>(), ports = new Set<number>(), labels = new Set<string>();
+  return rows.map((value: unknown) => {
+    if (!value || typeof value !== "object") throw new Error("Invalid page split entry");
+    const row = value as Record<string, unknown>;
+    if (typeof row.id !== "string" || !/^[a-z0-9_-]+$/i.test(row.id) || typeof row.label !== "string" || !row.label.trim()) throw new Error("Invalid page split id or label");
+    for (const key of ["port", "inboxPort", "claimPort"]) {
+      const port = row[key];
+      if (typeof port !== "number" || !Number.isInteger(port) || port < 1024 || port > 65535 || ports.has(port) || [5173, 5192, 5193, 8791].includes(port)) throw new Error("Invalid or duplicate page split port");
+      ports.add(port);
+    }
+    const id = row.id, label = row.label.trim();
+    if (ids.has(id) || labels.has(label)) throw new Error("Duplicate page split id or label");
+    ids.add(id); labels.add(label);
+    return { id, label, port: row.port as number, inboxPort: row.inboxPort as number, claimPort: row.claimPort as number, match: (name: string) => name.trim() === label };
+  });
+}
+
+export const SPLIT_PAGES = parseSplitPages(process.env.NEXT_PUBLIC_FRAMEFLOW_SPLIT_PAGES || "");
 
 export function pageStaysOnDefault(name: string) {
-  const trimmed = name.trim();
-  return trimmed === "仙侠" || trimmed.startsWith("尾帧高清队列验收");
+  return !instanceForPageName(name);
 }
 
 export function instanceForPageName(name: string) {
   return SPLIT_PAGES.find((item) => item.match(name)) ?? null;
 }
 
-/** workerd does not inherit FRAMEFLOW_* . Only 5174–5177 map to a split canvas; every other port stays the default instance. */
+/** Unconfigured ports stay on the default instance. */
 export function instanceForPort(port: number) {
   return SPLIT_PAGES.find((item) => item.port === port) ?? null;
 }

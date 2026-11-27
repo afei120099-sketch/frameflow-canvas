@@ -116,7 +116,7 @@ assert.equal(h.data.pauseCalls,0,'a source that is already completed does not pi
   const saved=newQueueSession('page:g-test',two,{x:0,y:0});
   const ids=['shape:doneA','shape:doneB','shape:live','shape:tailA','shape:tailB'];
   saved.entries.forEach((entry,index)=>{entry.nodeId=ids[index];entry.submissionState=index<3?'accepted':'pending';});
-  saved.entries[3].frameInputs={first:{src:'image:keep',name:'a.png',sourceNodeId:'shape:doneA',sourceShot:'doneA',sourceRunId:'run-a',sourceAssetId:'vid-a',sourceStorageReference:'media:a',sourceFrame:'last',seconds:1,width:8,height:8,enhancement:{originalAssetId:'orig-a',promptId:'99e2f374-6a7f-4cdf-a431-3e1277c1d956'}}};
+  saved.entries[3].frameInputs={first:{src:'image:keep',name:'a.png',sourceNodeId:'shape:doneA',sourceShot:'doneA',sourceRunId:'run-a',sourceAssetId:'vid-a',sourceStorageReference:'media:a',sourceFrame:'last',seconds:1,width:8,height:8,enhancement:{originalAssetId:'orig-a',promptId:'00000000-0000-4000-8000-000000000014'}}};
   const runs=[
     {runId:'run-a',ownerNodeId:'shape:doneA',status:'completed',submission:'accepted',comfyPromptId:'p-a',createdAt:1,outputAssetIds:['vid-a']},
     {runId:'run-b',ownerNodeId:'shape:doneB',status:'completed',submission:'accepted',comfyPromptId:'p-b',createdAt:2,outputAssetIds:['vid-b']},
@@ -124,14 +124,14 @@ assert.equal(h.data.pauseCalls,0,'a source that is already completed does not pi
   ];
   const assets=[{assetId:'vid-a',kind:'video',filename:'a.mp4',storageReference:'media:a'},{assetId:'vid-b',kind:'video',filename:'b.mp4',storageReference:'media:b'}];
   assert.deepEqual(frameEntriesToResume(saved,runs).map(entry=>entry.nodeId),['shape:tailA','shape:tailB'],'pending with an empty waitingReason stays in the continuation loop');
-  const ready=harness({queue:two,saved,runs,assets,hooks:{deferEnhancement:frame=>frame.enhancement?.promptId==='99e2f374-6a7f-4cdf-a431-3e1277c1d956'}});
+  const ready=harness({queue:two,saved,runs,assets,hooks:{deferEnhancement:frame=>frame.enhancement?.promptId==='00000000-0000-4000-8000-000000000014'}});
   await ready.api.resumeFrames();
   assert.deepEqual(ready.data.submitted,['shape:tailB']);
   assert.deepEqual(ready.data.extractions,[['media:b','last']]);
   assert.equal(ready.data.extractions.filter(item=>item[0]==='media:a').length,0,'the reserved tail is not extracted again');
   assert.equal(ready.data.blobReads,1,'polling a reserved tail HD does not re-read the source video');
   assert.match(ready.data.saved.entries[3].waitingReason,/不会改用低清图，也不会重复提交/);
-  assert.equal(ready.data.saved.entries[3].frameInputs.first.enhancement.promptId,'99e2f374-6a7f-4cdf-a431-3e1277c1d956');
+  assert.equal(ready.data.saved.entries[3].frameInputs.first.enhancement.promptId,'00000000-0000-4000-8000-000000000014');
   assert.equal(ready.data.saved.entries[3].frameInputs.first.src,'image:keep');
   assert.equal(ready.data.saved.entries[3].submissionState,'pending');
   assert.ok(ready.data.saved.entries[4].frameInputs.first.src.startsWith('image:'));

@@ -1,5 +1,5 @@
 """Local CPU cover compositor. No downloads, model loading, or source modification."""
-import base64, io, json, math, sys, re
+import base64, io, json, math, sys, re, os
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import numpy as np
@@ -8,7 +8,16 @@ from PIL import Image, ImageOps, ImageDraw, ImageFont, ImageFilter, ImageChops
 from fontTools.ttLib import TTFont
 from cover_art import decontaminate,relight,composite_linear,semantic_lines,bevel
 
-FONTS={'sans':Path('C:/Windows/Fonts/NotoSansSC-VF.ttf'),'serif':Path('C:/Windows/Fonts/NotoSerifSC-VF.ttf'),'brush':Path(__file__).resolve().parents[1]/'runtime/cover-v2/fonts/MaShanZheng-Regular.ttf'}
+def system_font(kind):
+    configured = os.environ.get('FRAMEFLOW_COVER_FONT_' + kind.upper())
+    candidates = [Path(configured)] if configured else []
+    windows = Path(os.environ.get('WINDIR', 'C:/Windows')) / 'Fonts'
+    names = ['NotoSerifSC-VF.ttf', 'simsun.ttc', 'msyh.ttc', 'simhei.ttf'] if kind == 'serif' else ['NotoSansSC-VF.ttf', 'msyh.ttc', 'simhei.ttf', 'simsun.ttc']
+    candidates += [windows / name for name in names]
+    candidates += [Path('/usr/share/fonts/opentype/noto') / ('NotoSerifCJK-Regular.ttc' if kind == 'serif' else 'NotoSansCJK-Regular.ttc'), Path('/System/Library/Fonts/PingFang.ttc')]
+    return next((p for p in candidates if p.is_file()), None)
+
+FONTS={'sans':system_font('sans'),'serif':system_font('serif'),'brush':Path(__file__).resolve().parents[1]/'runtime/cover-v2/fonts/MaShanZheng-Regular.ttf'}
 def image(data):
     if not isinstance(data,str) or not data.startswith('data:image/') or ',' not in data: raise ValueError('图片必须为本地上传的图像数据')
     raw=base64.b64decode(data.split(',',1)[1],validate=True)
@@ -85,8 +94,8 @@ def cutout(img,plan,out):
 def box_overlap(a,b):
     return max(0,min(a[0]+a[2],b[0]+b[2])-max(a[0],b[0]))*max(0,min(a[1]+a[3],b[1]+b[3])-max(a[1],b[1]))
 def font_for(key,size,title):
-    if key not in FONTS or not FONTS[key].is_file():raise ValueError('本机缺少指定Noto中文字体；未自动下载')
-    table=TTFont(str(FONTS[key]),lazy=True);cmap=table.getBestCmap();missing=[c for c in title if not c.isspace() and ord(c) not in cmap];table.close()
+    if key not in FONTS or FONTS[key] is None or not FONTS[key].is_file():raise ValueError('找不到中文字体；请配置 FRAMEFLOW_COVER_FONT_SANS / FRAMEFLOW_COVER_FONT_SERIF')
+    table=TTFont(str(FONTS[key]),lazy=True, **({'fontNumber':0} if FONTS[key].suffix.lower() == '.ttc' else {}));cmap=table.getBestCmap();missing=[c for c in title if not c.isspace() and ord(c) not in cmap];table.close()
     if missing:raise ValueError('字体不支持这些字符：'+''.join(dict.fromkeys(missing)))
     font=ImageFont.truetype(str(FONTS[key]),size)
     if hasattr(font,'set_variation_by_axes'):

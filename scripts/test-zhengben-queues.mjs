@@ -53,10 +53,10 @@ const h3qErrors = (report, i) => report.shots[i].filter((item) => item.level ===
 
 // ── 1. 正本「第一集写法」范例（2026-11-12 按正本 v2026-11-12.1 [开场空白] 改成第一句从 0 秒开始；EP02 L03 测试 B 按 v2026-11-09.6 改：人名只在参考说明和对白行，不写开口 / 嘴唇闭着 / 背景音乐） ──
 // 正本 v2026-11-11.8 起 ID 字段只能填 ID（h3q [ID] ERROR）：范例用格式正确的假 ID（8-4-4-4-12），名字靠 world() 的 names 对上。
-const ZY = "00000000-0000-4000-8000-0000000000a1", LW = "00000000-0000-4000-8000-0000000000a2", OFFICE = "00000000-0000-4000-8000-0000000000b1";
-const NAMES = { [ZY]: "张三", [LW]: "李四" };
+const ROLE_A = "00000000-0000-4000-8000-00000000001b", ROLE_B = "00000000-0000-4000-8000-00000000001c", OFFICE = "00000000-0000-4000-8000-00000000001d";
+const NAMES = { [ROLE_A]: "张三", [ROLE_B]: "李四" };
 const L03 = {
-  title: "EP02-L03｜抬头等她过来", roleIds: [ZY, LW], sceneAssetIds: [OFFICE], seconds: 14, aspect: "9:16", soundMode: "av", generationMode: "auto", dialogue: [],
+  title: "S01｜示例镜头A", roleIds: [ROLE_A, ROLE_B], sceneAssetIds: [OFFICE], seconds: 14, aspect: "9:16", soundMode: "av", generationMode: "auto", dialogue: [],
   prompt: [
     "参考说明（编号与提交顺序一致）：<Picture 1>是窗侧场景图，只用于这间办公室的桌、椅、玻璃门和窗，光线按正文；<Picture 2>是张三，只用于张三的脸、发型和服装；<Picture 3>是李四，只用于李四的脸、发型和服装。",
     "写实真人电影质感，Kodak Vision3 250D 胶片颗粒，真实皮肤毛孔与细小绒毛，布料褶皱与纤维清晰，生活感真实。他在画左，四分之三侧脸，坐在椅子上；她在画右，站在桌子靠门的一侧。玻璃门在画中后景，关着。机位在桌沿下，仰拍，中近景，35mm 等效，景深到两个人的脸，后景轻微虚化，机位固定。",
@@ -94,10 +94,10 @@ for (const sentence of SAMPLE_BGM.match(/这段听到的：[^。]*。/g)) assert
 assert.doesNotMatch(SAMPLE_BGM, /Role appearance|voice-timbre|Spoken dialogue|numbered|lips closed|\(张三|\(李四|background music/i);
 
 // ── 2. 正本前的旧写法（L03 测试 B 原文）：卡片报红，和 h3q check 一样 ──
-const oldB = `${H3}/../收件箱/示例项目_EP02_L03_B/示例项目_EP02_L03_B_queue.json`;
+const oldB = new URL("./fixtures/episode-settings/L03_标准_原文.json", import.meta.url);
 if (existsSync(oldB)) {
   const q = parseShotQueue(readFileSync(oldB, "utf8"));
-  const w = world(q, { "99e67465-7b1e-494b-befa-53a85534a365": "张三", "c68aa343-fccb-4877-a776-2fc30bef7df0": "李四" });
+  const w = world(q, { "00000000-0000-4000-8000-00000000000a": "张三", "00000000-0000-4000-8000-00000000000b": "李四" });
   const codes = shotCardChecks(q.chapters[0].shots[0], q, w.roles, w.assets).map((c) => c.code);
   for (const code of ["mouth_words", "name_misplaced", "music_named"]) assert.ok(!codes.includes(code), `画布不再自己查 ${code}，交给 h3q`);
   const report = HAS_H3Q ? await h3qReport(q) : null;
@@ -111,7 +111,7 @@ if (existsSync(oldB)) {
 }
 
 // ── 3. h3工具 下的现成队列（有就查）：dialogue 为空的不报红，提交正文逐字一致；dialogue 非空 → 红 + 一键搬进正文 ──
-const ep01 = ["EP01_queue_a.json", "EP01_queue_b.json", "EP01_queue_c.json"].map((name) => `${H3}/${name}`).filter(existsSync);
+const ep01 = ["L03_queue.json", "O1O2_queue.json", "V1_voice_queue.json"].map(name => new URL(`./fixtures/official-format/${name}`, import.meta.url));
 let checked = 0;
 for (const file of ep01) {
   const q = parseShotQueue(readFileSync(file, "utf8"));
@@ -148,7 +148,7 @@ for (const file of ep01) {
 }
 
 // ── 4. EP02 v3（反例）：点名背景音乐 → 红 ──
-const ep02 = `${H3}/EP02_queue.json`;
+const ep02 = `${H3}/EP02_queue.json`; // 可选：本机有点名背景音乐的反例队列才查
 if (existsSync(ep02)) {
   const q = parseShotQueue(readFileSync(ep02, "utf8"));
   const w = world(q);
